@@ -307,7 +307,4 @@ bool MPRCollisionTest(
             }
         }
     }
-
-    // Should never get here
-    return false;
 }

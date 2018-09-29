@@ -62,6 +62,7 @@ import dagon.graphics.texture;
 import dagon.graphics.particles;
 import dagon.graphics.materials.generic;
 import dagon.graphics.materials.standard;
+import dagon.graphics.materials.terrain2;
 import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
 import dagon.graphics.materials.particle;
@@ -345,7 +346,9 @@ class Scene: BaseScene
     GenericMaterial defaultMaterial3D;
     
     ParticleBackend particleMaterialBackend;
-    
+
+	TerrainBackend2 terrainMaterialBackend;
+	
     SkyBackend skyMaterialBackend;
 
     RenderingContext rc3d; 
@@ -851,6 +854,7 @@ class Scene: BaseScene
         lightManager = New!LightManager(200.0f, 100, assetManager);
         
         defaultMaterialBackend = New!StandardBackend(lightManager, assetManager);
+        terrainMaterialBackend = New!TerrainBackend2(lightManager, assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
         
         shadowMap = New!CascadedShadowMap(1024, this, 10, 30, 200, -100, 100, assetManager);

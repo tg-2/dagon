@@ -75,6 +75,7 @@ public
     import dagon.graphics.material;
     import dagon.graphics.environment;
     import dagon.graphics.mesh;
+    import dagon.graphics.terrainMesh;
     import dagon.graphics.animmodel;
     import dagon.graphics.view;
     import dagon.graphics.shadow;
@@ -91,6 +92,7 @@ public
     import dagon.graphics.materials.sky;
     import dagon.graphics.materials.hud;
     import dagon.graphics.materials.terrain;
+    import dagon.graphics.materials.terrain2;
     import dagon.graphics.materials.particle;
     
     import dagon.graphics.filters.fxaa;

@@ -39,54 +39,52 @@ enum VertexAttrib
     Vertices = 0,
     Normals = 1,
     Texcoords = 2,
-    Texture = 3,
-    DetailTexture = 4
+    Coords = 3,
 }
 
 class TerrainMesh: Owner, Drawable
 {
     bool dataReady = false;
     bool canRender = false;
-    
+
     // TODO: make these DynamicArrays
     Vector3f[] vertices;
     Vector3f[] normals;
     Vector2f[] texcoords;
-	uint[3][] indices;
-	uint[] textures;
-	uint[] detailTextures;
-    
+    Vector2f[] coords;
+    uint[3][] indices;
+
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint nbo = 0;
     GLuint tbo = 0;
+    GLuint cbo = 0;
     GLuint eao = 0;
-	GLuint txo = 0;
-	GLuint dto = 0;
-    
+
     this(Owner o)
     {
         super(o);
     }
-    
+
     ~this()
     {
         if (vertices.length) Delete(vertices);
         if (normals.length) Delete(normals);
         if (texcoords.length) Delete(texcoords);
-        if (textures.length) Delete(textures);
+        if (coords.length) Delete(coords);
         if (indices.length) Delete(indices);
-        
+
         if (canRender)
         {
             glDeleteVertexArrays(1, &vao);
             glDeleteBuffers(1, &vbo);
             glDeleteBuffers(1, &nbo);
             glDeleteBuffers(1, &tbo);
+            glDeleteBuffers(1, &cbo);
             glDeleteBuffers(1, &eao);
         }
     }
-    
+
     int opApply(scope int delegate(Triangle t) dg)
     {
         int result = 0;
@@ -113,33 +111,7 @@ class TerrainMesh: Owner, Drawable
 
         return result;
     }
-    
-    void generateNormals()
-    {
-        if (normals.length == 0)
-            return;
-    
-        normals[] = Vector3f(0.0f, 0.0f, 0.0f);
-    
-        foreach(i, ref f; indices)
-        {
-            Vector3f v0 = vertices[f[0]];
-            Vector3f v1 = vertices[f[1]];
-            Vector3f v2 = vertices[f[2]];
-            
-            Vector3f p = cross(v1 - v0, v2 - v0);
-            
-            normals[f[0]] += p;
-            normals[f[1]] += p;
-            normals[f[2]] += p;
-        }
-        
-        foreach(i, n; normals)
-        {
-            normals[i] = n.normalized;
-        }
-    }
-    
+
     void prepareVAO()
     {
         if (!dataReady)
@@ -147,7 +119,7 @@ class TerrainMesh: Owner, Drawable
 
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 3, vertices.ptr, GL_STATIC_DRAW); 
+        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 3, vertices.ptr, GL_STATIC_DRAW);
 
         glGenBuffers(1, &nbo);
         glBindBuffer(GL_ARRAY_BUFFER, nbo);
@@ -157,51 +129,43 @@ class TerrainMesh: Owner, Drawable
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glBufferData(GL_ARRAY_BUFFER, texcoords.length * float.sizeof * 2, texcoords.ptr, GL_STATIC_DRAW);
 
+        glGenBuffers(1, &cbo);
+        glBindBuffer(GL_ARRAY_BUFFER, cbo);
+        glBufferData(GL_ARRAY_BUFFER, coords.length * float.sizeof * 2, coords.ptr, GL_STATIC_DRAW);
+
         glGenBuffers(1, &eao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * uint.sizeof * 3, indices.ptr, GL_STATIC_DRAW);
-        
-        glGenBuffers(1, &txo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, txo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, textures.length * uint.sizeof, indices.ptr, GL_STATIC_DRAW);
 
-        glGenBuffers(1, &dto);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, dto);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, detailTextures.length * uint.sizeof, indices.ptr, GL_STATIC_DRAW);
-        
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
-    
+
         glEnableVertexAttribArray(VertexAttrib.Vertices);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexAttribPointer(VertexAttrib.Vertices, 3, GL_FLOAT, GL_FALSE, 0, null);
-    
+
         glEnableVertexAttribArray(VertexAttrib.Normals);
         glBindBuffer(GL_ARRAY_BUFFER, nbo);
         glVertexAttribPointer(VertexAttrib.Normals, 3, GL_FLOAT, GL_FALSE, 0, null);
-    
+
         glEnableVertexAttribArray(VertexAttrib.Texcoords);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glVertexAttribPointer(VertexAttrib.Texcoords, 2, GL_FLOAT, GL_FALSE, 0, null);
 
-        glEnableVertexAttribArray(VertexAttrib.Texture);
-        glBindBuffer(GL_ARRAY_BUFFER, txo);
-        glVertexAttribPointer(VertexAttrib.Texture, 1, GL_INT, GL_FALSE, 0, null);
-
-        glEnableVertexAttribArray(VertexAttrib.DetailTexture);
-        glBindBuffer(GL_ARRAY_BUFFER, dto);
-        glVertexAttribPointer(VertexAttrib.Texture, 1, GL_INT, GL_FALSE, 0, null);
+        glEnableVertexAttribArray(VertexAttrib.Coords);
+        glBindBuffer(GL_ARRAY_BUFFER, cbo);
+        glVertexAttribPointer(VertexAttrib.Coords, 2, GL_FLOAT, GL_FALSE, 0, null);
 
         glBindVertexArray(0);
-        
+
         canRender = true;
     }
-    
+
     void update(double dt)
     {
     }
-    
+
     void render(RenderingContext* rc)
     {
         if (canRender)

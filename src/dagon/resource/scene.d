@@ -854,7 +854,7 @@ class Scene: BaseScene
         lightManager = New!LightManager(200.0f, 100, assetManager);
         
         defaultMaterialBackend = New!GeometryPassBackend(assetManager);
-        terrainMaterialBackend = New!TerrainBackend2(lightManager, assetManager);
+        terrainMaterialBackend = New!TerrainBackend2(assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
         
         shadowMap = New!CascadedShadowMap(1024, this, 10, 30, 200, -100, 100, assetManager);

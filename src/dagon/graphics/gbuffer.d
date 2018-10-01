@@ -499,8 +499,6 @@ class GBuffer: Owner
         glEnable(GL_DEPTH_TEST);
         
         auto rcLocal = *rc;
-                
-        rcLocal.overrideMaterialBackend = geometryBackend;
         
         scene.renderOpaqueEntities3D(&rcLocal);
         

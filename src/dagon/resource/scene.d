@@ -342,7 +342,7 @@ class Scene: BaseScene
     CascadedShadowMap shadowMap;
     ParticleSystem particleSystem;
 
-    StandardBackend defaultMaterialBackend;
+    GeometryPassBackend defaultMaterialBackend;
     GenericMaterial defaultMaterial3D;
     
     ParticleBackend particleMaterialBackend;
@@ -853,12 +853,11 @@ class Scene: BaseScene
         
         lightManager = New!LightManager(200.0f, 100, assetManager);
         
-        defaultMaterialBackend = New!StandardBackend(lightManager, assetManager);
+        defaultMaterialBackend = New!GeometryPassBackend(assetManager);
         terrainMaterialBackend = New!TerrainBackend2(lightManager, assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
         
         shadowMap = New!CascadedShadowMap(1024, this, 10, 30, 200, -100, 100, assetManager);
-        defaultMaterialBackend.shadowMap = shadowMap;
         
         particleSystem = New!ParticleSystem(assetManager);
         

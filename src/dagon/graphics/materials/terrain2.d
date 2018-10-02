@@ -159,7 +159,11 @@ class TerrainBackend2: GLSLMaterialBackend
             vec2 screenVelocity = posScreen - prevPosScreen;
 
             // Parallax mapping
-            float height = 0.0;
+            const float heightFactor = 4;
+            float height = heightFactor*(1-texture(detailTexture, texCoord).x);
+            height = height * parallaxScale + parallaxBias;
+            vec2 shiftedTexCoord = texCoord;// + (height * tE.xy);
+            /*float height = 0.0;
             vec2 shiftedTexCoord = texCoord;
             if (parallaxMethod == 1)
                 shiftedTexCoord = parallaxMapping(tE, texCoord, height);
@@ -167,8 +171,22 @@ class TerrainBackend2: GLSLMaterialBackend
             // Normal mapping
             vec3 tN = normalize(texture(normalTexture, shiftedTexCoord).rgb * 2.0 - 1.0);
             tN.y = -tN.y;
-            N = normalize(TBN * tN);
+            N = normalize(TBN * tN);*/
 
+            // Bump mapping
+            const vec2 size = vec2(2.0,0.0);
+            const ivec3 off = ivec3(-1,0,1);
+            float s11 = height;
+            float s01 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.xy).x);
+            float s21 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.zy).x);
+            float s10 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yx).x);
+            float s12 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yz).x);
+            vec3 va = normalize(vec3(size.xy,s21-s01));
+            vec3 vb = normalize(vec3(size.yx,s12-s10));
+            vec4 bump = vec4( cross(va,vb),s11);
+
+            //N = normalize(TBN*bump.xyz);
+            N = normalize(TBN*bump.xyz);
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
             vec4 detailColor = texture(detailTexture, shiftedTexCoord);
@@ -201,8 +219,8 @@ class TerrainBackend2: GLSLMaterialBackend
     GLint blurModelViewProjMatrixLoc;
 
     GLint diffuseTextureLoc;
-	GLint detailTextureLoc;
-	GLint colorTextureLoc;
+    GLint detailTextureLoc;
+    GLint colorTextureLoc;
     GLint normalTextureLoc;
     GLint rmsTextureLoc;
     GLint emissionTextureLoc;
@@ -247,8 +265,8 @@ class TerrainBackend2: GLSLMaterialBackend
         auto idiffuse = "diffuse" in mat.inputs;
         auto idetail = "detail" in mat.inputs;
         auto icolor = "color" in mat.inputs;
-        auto inormal = "normal" in mat.inputs;
-        auto iheight = "height" in mat.inputs;
+        //auto inormal = "normal" in mat.inputs;
+        //auto iheight = "height" in mat.inputs;
         auto ipbr = "pbr" in mat.inputs;
         auto iroughness = "roughness" in mat.inputs;
         auto imetallic = "metallic" in mat.inputs;
@@ -308,7 +326,7 @@ class TerrainBackend2: GLSLMaterialBackend
         // Texture 1 - normal map + parallax map
         float parallaxScale = 0.03f;
         float parallaxBias = -0.01f;
-        bool normalTexturePrepared = inormal.texture !is null;
+        /+bool normalTexturePrepared = inormal.texture !is null;
         if (normalTexturePrepared)
             normalTexturePrepared = inormal.texture.image.channels == 4;
         if (!normalTexturePrepared)
@@ -328,10 +346,10 @@ class TerrainBackend2: GLSLMaterialBackend
         }
         glActiveTexture(GL_TEXTURE1);
         inormal.texture.bind();
-        glUniform1i(normalTextureLoc, 1);
+        glUniform1i(normalTextureLoc, 1);+/
         glUniform1f(parallaxScaleLoc, parallaxScale);
         glUniform1f(parallaxBiasLoc, parallaxBias);
-        glUniform1i(parallaxMethodLoc, parallaxMethod);
+        //glUniform1i(parallaxMethodLoc, parallaxMethod);
 
         // Texture 2 - PBR maps (roughness + metallic)
         if (ipbr is null)
@@ -372,8 +390,8 @@ class TerrainBackend2: GLSLMaterialBackend
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.unbind();
 
-        glActiveTexture(GL_TEXTURE1);
-        inormal.texture.unbind();
+        /+glActiveTexture(GL_TEXTURE1);
+        inormal.texture.unbind();+/
 
         glActiveTexture(GL_TEXTURE2);
         ipbr.texture.unbind();

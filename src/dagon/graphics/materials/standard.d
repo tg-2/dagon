@@ -425,6 +425,8 @@ class StandardBackend: GLSLMaterialBackend
             
             // Diffuse texture
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
+            if (diffuseColor.a != 1)
+                discard;
             vec3 albedo = toLinear(diffuseColor.rgb);
             
             vec3 emissionColor = toLinear(texture(emissionTexture, shiftedTexCoord).rgb);

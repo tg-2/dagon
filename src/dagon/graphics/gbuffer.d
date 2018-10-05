@@ -158,6 +158,8 @@ class GeometryPassBackend: GLSLMaterialBackend
             
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
+            if (diffuseColor.a != 1)
+                discard;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
             

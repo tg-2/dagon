@@ -36,14 +36,14 @@ import derelict.sdl2.sdl;
 import dagon.core.ownership;
 import dagon.core.event;
 
-import dagon.graphics.fpcamera;
+import dagon.graphics.fpcamera2;
 import dagon.graphics.view;
 import dagon.logics.entity;
 import dagon.logics.controller;
 
 class FirstPersonView2: EventListener, View
 {
-    FirstPersonCamera camera;
+    FirstPersonCamera2 camera;
     int oldMouseX = 0;
     int oldMouseY = 0;
     bool _active = false;
@@ -52,7 +52,7 @@ class FirstPersonView2: EventListener, View
     {
         super(emngr, owner);
 
-        camera = New!FirstPersonCamera(camEntity);
+        camera = New!FirstPersonCamera2(camEntity);
         camEntity.controller = camera;
     }
 

@@ -662,35 +662,15 @@ class Scene: BaseScene
         eLoadingProgressBar.material = mLoadingProgressBar;
     }
     
-    void sortEntities(ref DynamicArray!Entity entities)
+	static void sortEntities(ref DynamicArray!Entity entities)
     {
-        size_t j = 0;
-        Entity tmp;
-
-        auto edata = entities.data;
-
-        foreach(i, v; edata)
-        {
-            j = i;
-            size_t k = i;
-
-            while (k < edata.length)
-            {
-                float b1 = edata[j].layer;
-                float b2 = edata[k].layer;
-                
-                if (b2 < b1)
-                    j = k;
-                
-                k++;
-            }
-
-            tmp = edata[i];
-            edata[i] = edata[j];
-            edata[j] = tmp;
-
-            sortEntities(v.children);
-        }
+	    import std.algorithm;
+	    static struct Wtf{
+		    Entity x;
+	    }
+	    sort!"a.x.layer<b.x.layer"(cast(Wtf[])entities.data);
+	    foreach(v;entities.data)
+		    sortEntities(v.children);
     }
     
     TextAsset addTextAsset(string filename, bool preload = false)
@@ -781,7 +761,7 @@ class Scene: BaseScene
             e = New!Entity(eventManager, assetManager);
             entities2D.append(e);
             
-            sortEntities(entities2D);
+            //sortEntities(entities2D);
         }
         
         return e;
@@ -797,7 +777,7 @@ class Scene: BaseScene
             e = New!Entity(eventManager, assetManager);
             entities3D.append(e);
             
-            sortEntities(entities3D);
+            //sortEntities(entities3D);
         }
         
         e.material = defaultMaterial3D;
@@ -808,7 +788,7 @@ class Scene: BaseScene
     Entity addEntity3D(Entity e)
     {
         entities3D.append(e); 
-        sortEntities(entities3D);
+        //sortEntities(entities3D);
         return e;
     }
     
@@ -824,7 +804,7 @@ class Scene: BaseScene
         eSky.material = matSky;
         eSky.drawable = New!ShapeSphere(1.0f, 16, 8, true, assetManager); //aSphere.mesh;
         eSky.scaling = Vector3f(100.0f, 100.0f, 100.0f);
-        sortEntities(entities3D);
+        //sortEntities(entities3D);
         return eSky;
     }
     

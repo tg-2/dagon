@@ -138,32 +138,28 @@ class Mesh: Owner, Drawable
         if (!dataReady)
             return;
 
-        if (canRender)
+        if (!canRender)
         {
-            glDeleteVertexArrays(1, &vao);
-            glDeleteBuffers(1, &vbo);
-            glDeleteBuffers(1, &nbo);
-            glDeleteBuffers(1, &tbo);
-            glDeleteBuffers(1, &eao);
+            glGenBuffers(1, &vbo);
+            glGenBuffers(1, &nbo);
+            glGenBuffers(1, &tbo);
+            glGenBuffers(1, &eao);
+            glGenVertexArrays(1, &vao);
+            canRender = true;
         }
 
-        glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 3, vertices.ptr, GL_STATIC_DRAW);
 
-        glGenBuffers(1, &nbo);
         glBindBuffer(GL_ARRAY_BUFFER, nbo);
         glBufferData(GL_ARRAY_BUFFER, normals.length * float.sizeof * 3, normals.ptr, GL_STATIC_DRAW);
 
-        glGenBuffers(1, &tbo);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glBufferData(GL_ARRAY_BUFFER, texcoords.length * float.sizeof * 2, texcoords.ptr, GL_STATIC_DRAW);
 
-        glGenBuffers(1, &eao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * uint.sizeof * 3, indices.ptr, GL_STATIC_DRAW);
 
-        glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
 
@@ -180,8 +176,7 @@ class Mesh: Owner, Drawable
         glVertexAttribPointer(VertexAttrib.Texcoords, 2, GL_FLOAT, GL_FALSE, 0, null);
 
         glBindVertexArray(0);
-
-        canRender = true;
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void update(double dt)

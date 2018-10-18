@@ -77,6 +77,7 @@ public
     import dagon.graphics.material;
     import dagon.graphics.environment;
     import dagon.graphics.mesh;
+    import dagon.graphics.boneMesh;
     import dagon.graphics.terrainMesh;
     import dagon.graphics.animmodel;
     import dagon.graphics.view;

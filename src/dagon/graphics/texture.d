@@ -75,7 +75,7 @@ class Texture: Owner
         createFromImage(img, genMipmaps);
     }
 
-    void createFromImage(SuperImage img, bool genMipmaps = true)
+	void createFromImage(SuperImage img, bool genMipmaps = true, GLuint wrapping=GL_REPEAT)
     {
         image = img;
         width = img.width;
@@ -101,8 +101,8 @@ class Texture: Owner
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         

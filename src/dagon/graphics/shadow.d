@@ -121,9 +121,13 @@ class ShadowBackend: GLSLMaterialBackend
         uniform mat4 projectionMatrix;
 
         layout (location = 0) in vec3 va_Vertex;
+        layout (location = 2) in vec2 va_Texcoord;
+
+        out vec2 texCoord;
 
         void main()
         {
+            texCoord = va_Texcoord;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex, 1.0);
         }
     ";
@@ -132,10 +136,15 @@ class ShadowBackend: GLSLMaterialBackend
     "
         #version 330 core
 
+        in vec2 texCoord;
+        uniform sampler2D diffuseTexture;
         out vec4 frag_color;
 
         void main()
         {
+            vec4 diffuseColor = texture(diffuseTexture, texCoord);
+            if (diffuseColor.a == 0)
+                discard;
             frag_color = vec4(1.0, 1.0, 1.0, 1.0);
         }
     ";
@@ -146,26 +155,45 @@ class ShadowBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
 
+    GLint diffuseTextureLoc;
+
     this(Owner o)
     {
         super(o);
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+        diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
+        auto idiffuse = "diffuse" in mat.inputs;
         glDisable(GL_CULL_FACE);
 
         glUseProgram(shaderProgram);
 
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
+
+        if (idiffuse.texture is null)
+        {
+            writeln("!!");
+            Color4f color = Color4f(idiffuse.asVector4f);
+            idiffuse.texture = makeOnePixelTexture(mat, color);
+        }
+        glActiveTexture(GL_TEXTURE0);
+        idiffuse.texture.bind();
+        glUniform1i(diffuseTextureLoc, 0);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
+        auto idiffuse = "diffuse" in mat.inputs;
+        assert(!!idiffuse.texture);
+        glActiveTexture(GL_TEXTURE0);
+        idiffuse.texture.unbind();
+
         glUseProgram(0);
     }
 }
@@ -183,12 +211,16 @@ class BoneShadowBackend: GLSLMaterialBackend
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
         layout (location = 2) in vec3 va_Vertex2;
+        layout (location = 4) in vec2 va_Texcoord;
         layout (location = 5) in uvec3 va_BoneIndices;
         layout (location = 6) in vec3 va_Weights;
         layout (location = 7) uniform mat4 pose[32];
 
+        out vec2 texCoord;
+
         void main()
         {
+            texCoord = va_Texcoord;
             vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
                            + pose[va_BoneIndices.y] * vec4(va_Vertex1, 1.0) * va_Weights.y
                            + pose[va_BoneIndices.z] * vec4(va_Vertex2, 1.0) * va_Weights.z;
@@ -200,10 +232,15 @@ class BoneShadowBackend: GLSLMaterialBackend
     "
         #version 330 core
 
+        in vec2 texCoord;
+        uniform sampler2D diffuseTexture;
         out vec4 frag_color;
 
         void main()
         {
+            vec4 diffuseColor = texture(diffuseTexture, texCoord);
+            if (diffuseColor.a == 0)
+                discard;
             frag_color = vec4(1.0, 1.0, 1.0, 1.0);
         }
     ";
@@ -214,26 +251,45 @@ class BoneShadowBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
 
+    GLint diffuseTextureLoc;
+
     this(Owner o)
     {
         super(o);
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+        diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
+        auto idiffuse = "diffuse" in mat.inputs;
         glDisable(GL_CULL_FACE);
 
         glUseProgram(shaderProgram);
 
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
+
+        if (idiffuse.texture is null)
+        {
+            Color4f color = Color4f(idiffuse.asVector4f);
+            idiffuse.texture = makeOnePixelTexture(mat, color);
+        }
+        glActiveTexture(GL_TEXTURE0);
+        idiffuse.texture.bind();
+        glUniform1i(diffuseTextureLoc, 0);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
+        auto idiffuse = "diffuse" in mat.inputs;
+        assert(!!idiffuse.texture);
+
+        glActiveTexture(GL_TEXTURE0);
+        idiffuse.texture.unbind();
+
         glUseProgram(0);
     }
 }

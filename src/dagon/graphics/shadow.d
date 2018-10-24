@@ -178,7 +178,6 @@ class ShadowBackend: GLSLMaterialBackend
 
         if (idiffuse.texture is null)
         {
-            writeln("!!");
             Color4f color = Color4f(idiffuse.asVector4f);
             idiffuse.texture = makeOnePixelTexture(mat, color);
         }

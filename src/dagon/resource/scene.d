@@ -64,6 +64,7 @@ import dagon.graphics.materials.generic;
 import dagon.graphics.materials.standard;
 import dagon.graphics.materials.bone;
 import dagon.graphics.materials.terrain2;
+import dagon.graphics.materials.shadeless;
 import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
 import dagon.graphics.materials.particle;
@@ -350,6 +351,7 @@ class Scene: BaseScene
 
     BoneBackend boneMaterialBackend;
     TerrainBackend2 terrainMaterialBackend;
+	ShadelessBackend shadelessMaterialBackend;
 
     SkyBackend skyMaterialBackend;
 
@@ -838,6 +840,7 @@ class Scene: BaseScene
         defaultMaterialBackend = New!GeometryPassBackend(assetManager);
         boneMaterialBackend = New!BoneBackend(assetManager);
         terrainMaterialBackend = New!TerrainBackend2(assetManager);
+        shadelessMaterialBackend = New!ShadelessBackend(assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
 
         shadowMap = New!CascadedShadowMap(1024, this, 10, 30, 200, -1000, 1000, assetManager);

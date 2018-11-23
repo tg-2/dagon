@@ -62,8 +62,8 @@ class FirstPersonView2: EventListener, View
                 
         if (_active)
         {            
-            float turn_m =  (eventManager.mouseRelX) * 0.2f;
-            float pitch_m = (eventManager.mouseRelY) * 0.2f;
+	        float turn_m =  (eventManager.mouseRelX) * 2.0f;
+            float pitch_m = (eventManager.mouseRelY) * 2.0f;
         
             camera.pitch += pitch_m;
             camera.turn += turn_m;            

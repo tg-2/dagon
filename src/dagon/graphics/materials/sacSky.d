@@ -81,6 +81,7 @@ class SacSkyBackend: GLSLMaterialBackend
         uniform float alpha;
         uniform float energy;
         uniform vec2 sunLoc;
+        uniform vec2 cloudOffset;
         
         in vec3 eyePosition;
         in vec2 texCoord;
@@ -104,12 +105,12 @@ class SacSkyBackend: GLSLMaterialBackend
             return pow(v, vec3(2.2));
         }
 
-        float maxTexCoord = 8;
+        float maxTexCoord = 4;
 
         void main()
         {
             vec2 loc = 2.0*texCoord/maxTexCoord-vec2(1.0,1.0);
-            vec4 col = texture(diffuseTexture, texCoord);
+            vec4 col = texture(diffuseTexture, texCoord-cloudOffset);
             float rSq = dot(loc,loc);
             vec2 sunDiff = sunLoc-loc;
             float rSun = dot(sunDiff,sunDiff);
@@ -131,8 +132,10 @@ class SacSkyBackend: GLSLMaterialBackend
     GLint alphaLoc;
     GLint energyLoc;
 	GLint sunLocLoc;
+	GLint cloudOffsetLoc;
 
 	Vector2f sunLoc = Vector2f(0,0);
+	Vector2f cloudOffset = Vector2f(0,0);
 	
     this(Owner o)
     {
@@ -145,6 +148,7 @@ class SacSkyBackend: GLSLMaterialBackend
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
         sunLocLoc = glGetUniformLocation(shaderProgram, "sunLoc");
+        cloudOffsetLoc = glGetUniformLocation(shaderProgram, "cloudOffset");
     }
     
     override void bind(GenericMaterial mat, RenderingContext* rc)
@@ -178,6 +182,7 @@ class SacSkyBackend: GLSLMaterialBackend
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
         glUniform2f(sunLocLoc, sunLoc.x, sunLoc.y);
+        glUniform2f(cloudOffsetLoc, cloudOffset.x, cloudOffset.y);
     }
     
     override void unbind(GenericMaterial mat, RenderingContext* rc)

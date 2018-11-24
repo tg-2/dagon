@@ -80,6 +80,7 @@ class SacSkyBackend: GLSLMaterialBackend
         uniform sampler2D diffuseTexture;
         uniform float alpha;
         uniform float energy;
+        uniform vec2 sunLoc;
         
         in vec3 eyePosition;
         in vec2 texCoord;
@@ -109,7 +110,11 @@ class SacSkyBackend: GLSLMaterialBackend
         {
             vec2 loc = 2.0*texCoord/maxTexCoord-vec2(1.0,1.0);
             vec4 col = texture(diffuseTexture, texCoord);
-            frag_color = vec4(toLinear(col.rgb) * energy, col.a * alpha * (1-loc.x*loc.x-loc.y*loc.y));
+            float rSq = dot(loc,loc);
+            vec2 sunDiff = sunLoc-loc;
+            float rSun = dot(sunDiff,sunDiff);
+            float sGap = min(1,96*rSun);
+            frag_color = vec4(toLinear(col.rgb) * energy, col.a * alpha * (1-rSq)*sGap);
             frag_luma = vec4(energy, 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
@@ -125,7 +130,10 @@ class SacSkyBackend: GLSLMaterialBackend
     GLint diffuseTextureLoc;
     GLint alphaLoc;
     GLint energyLoc;
-    
+	GLint sunLocLoc;
+
+	Vector2f sunLoc = Vector2f(0,0);
+	
     this(Owner o)
     {
         super(o);
@@ -136,6 +144,7 @@ class SacSkyBackend: GLSLMaterialBackend
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
+        sunLocLoc = glGetUniformLocation(shaderProgram, "sunLoc");
     }
     
     override void bind(GenericMaterial mat, RenderingContext* rc)
@@ -168,6 +177,7 @@ class SacSkyBackend: GLSLMaterialBackend
         glUniform1i(diffuseTextureLoc, 0);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
+        glUniform2f(sunLocLoc, sunLoc.x, sunLoc.y);
     }
     
     override void unbind(GenericMaterial mat, RenderingContext* rc)

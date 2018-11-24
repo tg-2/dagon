@@ -60,10 +60,10 @@ class Environment: Owner
     
     Texture environmentMap;    
     
-    Color4f sunZenithColor = Color4f(1.0, 0.9, 0.8, 1.0);
-    Color4f sunHorizonColor = Color4f(1.0, 0.2, 0.0, 1.0);
+	//Color4f sunZenithColor = Color4f(1.0, 0.9, 0.8, 1.0);
+	//Color4f sunHorizonColor = Color4f(1.0, 0.2, 0.0, 1.0);
     Quaternionf sunRotation;
-    float sunEnergy = 50.0f;
+	float sunEnergy = 10.0f;//50.0f;
        
     Color4f skyZenithColorAtMidday = Color4f(0.1, 0.2, 1.0, 1.0);
     Color4f skyZenithColorAtSunset = Color4f(0.1, 0.2, 0.4, 1.0);
@@ -106,7 +106,7 @@ class Environment: Owner
     }
     
     void update(double dt)
-    {
+    { 
         if (useSkyColors)
         {
             skyZenithColor = lerpColorsBySunAngle(skyZenithColorAtMidday, skyZenithColorAtSunset, skyZenithColorAtMidnight);
@@ -137,10 +137,11 @@ class Environment: Owner
         return sunRotation.rotate(Vector3f(0, 0, 1));
     }
 
-    Color4f sunColor()
+	/+Color4f sunColor()
     {
-        return lerpColorsBySunAngle(sunZenithColor, sunHorizonColor, Color4f(0.0f, 0.0f, 0.0f, 1.0f));
-    }
+	    return lerpColorsBySunAngle(sunZenithColor, sunHorizonColor, Color4f(0.0f, 0.0f, 0.0f, 1.0f));
+    }+/
+	Color4f sunColor=Color4f(1.0, 0.9, 0.8, 1.0);
     
     Color4f lerpColorsBySunAngle(Color4f atZenith, Color4f atHorizon, Color4f atNightSide)
     {

@@ -25,7 +25,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
-module dagon.graphics.materials.shadeless;
+module dagon.graphics.materials.sacSun;
 
 import std.stdio;
 import std.math;
@@ -48,7 +48,7 @@ import dagon.graphics.materials.generic;
  * Backend for shadeless material (e.g., only textured or filled with solid color)
  */
 
-class ShadelessBackend: GLSLMaterialBackend
+class SacSunBackend: GLSLMaterialBackend
 {    
     private string vsText = "
         #version 330 core
@@ -106,7 +106,7 @@ class ShadelessBackend: GLSLMaterialBackend
         void main()
         {
             vec4 col = texture(diffuseTexture, texCoord);
-            frag_color = vec4(toLinear(col.rgb) * energy, col.a * alpha);
+            frag_color = vec4(toLinear(col.rgb) * energy, min(3*luminance(col.rgb),1) * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);

@@ -298,9 +298,7 @@ class CascadedShadowMap: Owner
 {
     uint size;
     Scene scene;
-    ShadowArea area1;
-    ShadowArea area2;
-    ShadowArea area3;
+    ShadowArea[3] area;
 
     GLuint depthTexture;
     GLuint framebuffer1;
@@ -336,9 +334,9 @@ class CascadedShadowMap: Owner
         this.zStart = zStart;
         this.zEnd = zEnd;
 
-        this.area1 = New!ShadowArea(scene.environment, projSize1, projSize1, zStart, zEnd, this);
-        this.area2 = New!ShadowArea(scene.environment, projSize2, projSize2, zStart, zEnd, this);
-        this.area3 = New!ShadowArea(scene.environment, projSize3, projSize3, zStart, zEnd, this);
+        this.area[0] = New!ShadowArea(scene.environment, projSize1, projSize1, zStart, zEnd, this);
+        this.area[1] = New!ShadowArea(scene.environment, projSize2, projSize2, zStart, zEnd, this);
+        this.area[2] = New!ShadowArea(scene.environment, projSize3, projSize3, zStart, zEnd, this);
 
         this.sb = New!ShadowBackend(this);
         this.sm = New!GenericMaterial(sb, this);
@@ -391,14 +389,14 @@ class CascadedShadowMap: Owner
 
     Vector3f position()
     {
-        return area1.position;
+        return area[0].position;
     }
 
     void position(Vector3f pos)
     {
-        area1.position = pos;
-        area2.position = pos;
-        area3.position = pos;
+        area[0].position = pos;
+        area[1].position = pos;
+        area[2].position = pos;
     }
 
     ~this()
@@ -414,9 +412,9 @@ class CascadedShadowMap: Owner
 
     void update(RenderingContext* rc, double dt)
     {
-        area1.update(rc, dt);
-        area2.update(rc, dt);
-        area3.update(rc, dt);
+        area[0].update(rc, dt);
+        area[1].update(rc, dt);
+        area[2].update(rc, dt);
     }
 
     void render(RenderingContext* rc)
@@ -430,9 +428,9 @@ class CascadedShadowMap: Owner
         glEnable(GL_DEPTH_TEST);
 
         auto rcLocal = *rc;
-        rcLocal.projectionMatrix = area1.projectionMatrix;
-        rcLocal.viewMatrix = area1.viewMatrix;
-        rcLocal.invViewMatrix = area1.invViewMatrix;
+        rcLocal.projectionMatrix = area[0].projectionMatrix;
+        rcLocal.viewMatrix = area[0].viewMatrix;
+        rcLocal.invViewMatrix = area[0].invViewMatrix;
         rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
         rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
         rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
@@ -454,9 +452,9 @@ class CascadedShadowMap: Owner
         glScissor(0, 0, size, size);
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        rcLocal.projectionMatrix = area2.projectionMatrix;
-        rcLocal.viewMatrix = area2.viewMatrix;
-        rcLocal.invViewMatrix = area2.invViewMatrix;
+        rcLocal.projectionMatrix = area[1].projectionMatrix;
+        rcLocal.viewMatrix = area[1].viewMatrix;
+        rcLocal.invViewMatrix = area[1].invViewMatrix;
         rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
         rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
         rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
@@ -472,9 +470,9 @@ class CascadedShadowMap: Owner
         glScissor(0, 0, size, size);
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        rcLocal.projectionMatrix = area3.projectionMatrix;
-        rcLocal.viewMatrix = area3.viewMatrix;
-        rcLocal.invViewMatrix = area3.invViewMatrix;
+        rcLocal.projectionMatrix = area[2].projectionMatrix;
+        rcLocal.viewMatrix = area[2].viewMatrix;
+        rcLocal.invViewMatrix = area[2].invViewMatrix;
         rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
         rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
         rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));

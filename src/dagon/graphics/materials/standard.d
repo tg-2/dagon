@@ -836,9 +836,9 @@ class StandardBackend: GLSLMaterialBackend
 
             glUniform1i(shadowTextureArrayLoc, 5);
             glUniform1f(shadowTextureSizeLoc, cast(float)shadowMap.size);
-            glUniformMatrix4fv(shadowMatrix1Loc, 1, 0, shadowMap.area1.shadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix2Loc, 1, 0, shadowMap.area2.shadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix3Loc, 1, 0, shadowMap.area3.shadowMatrix.arrayof.ptr);
+            glUniformMatrix4fv(shadowMatrix1Loc, 1, 0, shadowMap.area[0].shadowMatrix.arrayof.ptr);
+            glUniformMatrix4fv(shadowMatrix2Loc, 1, 0, shadowMap.area[1].shadowMatrix.arrayof.ptr);
+            glUniformMatrix4fv(shadowMatrix3Loc, 1, 0, shadowMap.area[2].shadowMatrix.arrayof.ptr);
             glUniform1i(useShadowsLoc, 1);            
             // TODO: shadowFilter
             

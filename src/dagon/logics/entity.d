@@ -323,7 +323,7 @@ class Entity: Owner, Drawable
 
         auto renderMaterial = material;
         if (rcLocal.shadowMode && shadowMaterial){
-            assert(!transparent);
+	        //assert(!transparent);
             renderMaterial = shadowMaterial;
         }
 

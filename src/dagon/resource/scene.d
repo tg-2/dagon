@@ -961,7 +961,7 @@ class Scene: BaseScene
             e.processEvents();
 
         timer += dt;
-        if (timer >= fixedTimeStep)
+        while (timer >= fixedTimeStep)
         {
             timer -= fixedTimeStep;
 

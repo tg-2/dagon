@@ -887,13 +887,13 @@ class Scene: BaseScene
         hdrFilter.velocityTexture = gbuffer.velocityTexture; //sceneFramebuffer.velocityTexture;
         postFilters.append(hdrFilter);
 
-        fxaaFilter = New!PostFilterFXAA(null, null, assetManager);
+        /+fxaaFilter = New!PostFilterFXAA(null, null, assetManager);
         postFilters.append(fxaaFilter);
-        fxaaFilter.enabled = false;
+        fxaaFilter.enabled = false;+/
 
-        lensFilter = New!PostFilterLensDistortion(null, null, assetManager);
+        /+lensFilter = New!PostFilterLensDistortion(null, null, assetManager);
         postFilters.append(lensFilter);
-        lensFilter.enabled = false;
+        lensFilter.enabled = false;+/
 
         finalizerFilter = New!PostFilterFinalizer(null, null, assetManager);
 
@@ -954,37 +954,36 @@ class Scene: BaseScene
 
     override void onUpdate(double dt)
     {
-        foreach(e; entities3D)
+/+        foreach(e; entities3D)
             e.processEvents();
 
         foreach(e; entities2D)
-            e.processEvents();
+            e.processEvents();+/
 
         timer += dt;
+        if (view)
+        {
+	        view.update(dt);
+	        view.prepareRC(&rc3d);
+        }
         while (timer >= fixedTimeStep)
         {
             timer -= fixedTimeStep;
 
-            if (view)
-            {
-                view.update(fixedTimeStep);
-                view.prepareRC(&rc3d);
-            }
-
             rc3d.time += fixedTimeStep;
             rc2d.time += fixedTimeStep;
-
+/+
             foreach(e; entities3D)
                 e.update(fixedTimeStep);
 
             foreach(e; entities2D)
                 e.update(fixedTimeStep);
-
++/
             particleSystem.update(fixedTimeStep);
 
             onLogicsUpdate(fixedTimeStep);
 
-            environment.update(fixedTimeStep);
+            //environment.update(fixedTimeStep);
 
             if (view) // TODO: allow to turn this off
             {
@@ -1005,7 +1004,7 @@ class Scene: BaseScene
 
             shadowMap.update(&rc3d, fixedTimeStep);
 
-            //lightManager.update(&rc3d);
+            lightManager.update(&rc3d);
         }
     }
 

@@ -301,18 +301,14 @@ class CascadedShadowMap: Owner
     ShadowArea[3] area;
 
     GLuint depthTexture;
-    GLuint framebuffer1;
-    GLuint framebuffer2;
-    GLuint framebuffer3;
+    GLuint[3] framebuffer;
 
     ShadowBackend sb;
     GenericMaterial sm;
     BoneShadowBackend bsb;
     GenericMaterial bsm;
 
-    float projSize1 = 5.0f;
-    float projSize2 = 15.0f;
-    float projSize3 = 400.0f;
+    float[3] projSize = [5.0f,15.0f,400.0f];
 
     float zStart = -300.0f;
     float zEnd = 300.0f;
@@ -321,22 +317,19 @@ class CascadedShadowMap: Owner
     float shadowBrightness = 0.1f;
     bool useHeightCorrectedShadows = false;
 
-    this(uint size, Scene scene, float projSizeNear, float projSizeMid, float projSizeFar, float zStart, float zEnd, Owner o)
+    this(uint size, Scene scene, float[3] projSize, float zStart, float zEnd, Owner o)
     {
         super(o);
         this.size = size;
         this.scene = scene;
 
-        projSize1 = projSizeNear;
-        projSize2 = projSizeMid;
-        projSize3 = projSizeFar;
+        this.projSize = projSize;
 
         this.zStart = zStart;
         this.zEnd = zEnd;
 
-        this.area[0] = New!ShadowArea(scene.environment, projSize1, projSize1, zStart, zEnd, this);
-        this.area[1] = New!ShadowArea(scene.environment, projSize2, projSize2, zStart, zEnd, this);
-        this.area[2] = New!ShadowArea(scene.environment, projSize3, projSize3, zStart, zEnd, this);
+        foreach(i;0..this.area.length)
+            this.area[i] = New!ShadowArea(scene.environment, projSize[i], projSize[i], zStart, zEnd, this);
 
         this.sb = New!ShadowBackend(this);
         this.sm = New!GenericMaterial(sb, this);
@@ -365,26 +358,14 @@ class CascadedShadowMap: Owner
 
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-        glGenFramebuffers(1, &framebuffer1);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer1);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glGenFramebuffers(1, &framebuffer2);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, 1);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glGenFramebuffers(1, &framebuffer3);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer3);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, 2);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        foreach(GLint i;0..framebuffer.length){
+            glGenFramebuffers(1, &framebuffer[i]);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer[i]);
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, i);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     Vector3f position()
@@ -394,17 +375,15 @@ class CascadedShadowMap: Owner
 
     void position(Vector3f pos)
     {
-        area[0].position = pos;
-        area[1].position = pos;
-        area[2].position = pos;
+        foreach(i;0..area.length)
+            area[i].position = pos;
     }
 
     ~this()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDeleteFramebuffers(1, &framebuffer1);
-        glDeleteFramebuffers(1, &framebuffer2);
-        glDeleteFramebuffers(1, &framebuffer3);
+        foreach(i;0..framebuffer.length)
+            glDeleteFramebuffers(1, &framebuffer[i]);
 
         if (glIsTexture(depthTexture))
             glDeleteTextures(1, &depthTexture);
@@ -412,75 +391,39 @@ class CascadedShadowMap: Owner
 
     void update(RenderingContext* rc, double dt)
     {
-        area[0].update(rc, dt);
-        area[1].update(rc, dt);
-        area[2].update(rc, dt);
+        foreach(i;0..area.length)
+            area[i].update(rc, dt);
     }
 
     void render(RenderingContext* rc)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer1);
-
-        glViewport(0, 0, size, size);
-        glScissor(0, 0, size, size);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
-
         auto rcLocal = *rc;
-        rcLocal.projectionMatrix = area[0].projectionMatrix;
-        rcLocal.viewMatrix = area[0].viewMatrix;
-        rcLocal.invViewMatrix = area[0].invViewMatrix;
-        rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
-        rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
-        rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
-
         rcLocal.shadowMode = true;
+        foreach(i;0..area.length){
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer[i]);
 
-        glPolygonOffset(3.0, 0.0);
-        glDisable(GL_CULL_FACE);
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            glViewport(0, 0, size, size);
+            glScissor(0, 0, size, size);
+            glClear(GL_DEPTH_BUFFER_BIT);
 
-        foreach(e; scene.entities3D)
-            if (e.castShadow)
-                e.render(&rcLocal);
-        scene.particleSystem.render(&rcLocal);
+            glEnable(GL_DEPTH_TEST);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
+            rcLocal.projectionMatrix = area[i].projectionMatrix;
+            rcLocal.viewMatrix = area[i].viewMatrix;
+            rcLocal.invViewMatrix = area[i].invViewMatrix;
+            rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
+            rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
+            rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
 
-        glViewport(0, 0, size, size);
-        glScissor(0, 0, size, size);
-        glClear(GL_DEPTH_BUFFER_BIT);
+            glPolygonOffset(3.0, 0.0);
+            glDisable(GL_CULL_FACE);
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-        rcLocal.projectionMatrix = area[1].projectionMatrix;
-        rcLocal.viewMatrix = area[1].viewMatrix;
-        rcLocal.invViewMatrix = area[1].invViewMatrix;
-        rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
-        rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
-        rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
-
-        foreach(e; scene.entities3D)
-            if (e.castShadow)
-                e.render(&rcLocal);
-        scene.particleSystem.render(&rcLocal);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer3);
-
-        glViewport(0, 0, size, size);
-        glScissor(0, 0, size, size);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        rcLocal.projectionMatrix = area[2].projectionMatrix;
-        rcLocal.viewMatrix = area[2].viewMatrix;
-        rcLocal.invViewMatrix = area[2].invViewMatrix;
-        rcLocal.normalMatrix = rcLocal.invViewMatrix.transposed;
-        rcLocal.viewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.viewMatrix));
-        rcLocal.invViewRotationMatrix = matrix3x3to4x4(matrix4x4to3x3(rcLocal.invViewMatrix));
-
-        foreach(e; scene.entities3D)
-            if (e.castShadow)
-                e.render(&rcLocal);
-        scene.particleSystem.render(&rcLocal);
+            foreach(e; scene.entities3D)
+                if (e.castShadow)
+                    e.render(&rcLocal);
+            scene.particleSystem.render(&rcLocal);
+        }
 
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glEnable(GL_CULL_FACE);

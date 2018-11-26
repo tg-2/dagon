@@ -50,44 +50,44 @@ class DeferredEnvironmentPass: Owner
     Vector2f[4] vertices;
     Vector2f[4] texcoords;
     uint[3][2] indices;
-    
+
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint tbo = 0;
     GLuint eao = 0;
-    
+
     GLenum envPassShaderVert;
     GLenum envPassShaderFrag;
     GLenum envPassShaderProgram;
-    
-    private string envPassVsText = 
+
+    private string envPassVsText =
     "
         #version 330 core
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
         uniform vec2 viewSize;
-        
+
         layout (location = 0) in vec2 va_Vertex;
         layout (location = 1) in vec2 va_Texcoord;
 
         out vec2 texCoord;
-        
+
         void main()
         {
             texCoord = va_Texcoord;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex * viewSize, 0.0, 1.0);
         }
     ";
-    
+
     private string envPassFsText =
     "
         #version 330 core
-        
+
         #define PI 3.14159265359
         const float PI2 = PI * 2.0;
-        
+
         uniform sampler2D colorBuffer;
         uniform sampler2D rmsBuffer;
         uniform sampler2D positionBuffer;
@@ -98,17 +98,16 @@ class DeferredEnvironmentPass: Owner
         uniform sampler2DArrayShadow shadowTextureArray;
         uniform float shadowTextureSize;
         //uniform bool useShadows;
-        uniform mat4 shadowMatrix1;
-        uniform mat4 shadowMatrix2;
-        uniform mat4 shadowMatrix3;
-        
+        #define numShadowAreas 3
+        uniform mat4 shadowMatrix[numShadowAreas];
+
         uniform sampler2D environmentMap;
         uniform bool useEnvironmentMap;
-        
+
         uniform mat4 camViewMatrix;
         uniform mat4 camInvViewMatrix;
         uniform mat4 camProjectionMatrix;
-        
+
         uniform vec3 sunDirection;
         uniform vec3 sunColor;
         uniform float sunEnergy;
@@ -120,16 +119,16 @@ class DeferredEnvironmentPass: Owner
         uniform vec3 fogColor;
         uniform float fogStart;
         uniform float fogEnd;
-        
+
         uniform bool enableSSAO;
 
         in vec2 texCoord;
-        
+
         layout(location = 0) out vec4 frag_color;
         layout(location = 1) out vec4 frag_luminance;
-        
+
         const float eyeSpaceNormalShift = 0.05;
-        
+
         float shadowLookup(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in vec2 offset)
         {
             float texelSize = 1.0 / shadowTextureSize;
@@ -140,25 +139,25 @@ class DeferredEnvironmentPass: Owner
             float s = texture(depths, c);
             return s;
         }
-        
+
         float shadow(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in float yshift)
         {
             return shadowLookup(depths, layer, coord, vec2(0.0, yshift));
         }
-        
+
         float shadowPCF(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in float radius, in float yshift)
         {
             float s = 0.0;
             float x, y;
-	        for (y = -radius ; y < radius ; y += 1.0)
-	        for (x = -radius ; x < radius ; x += 1.0)
+            for (y = -radius ; y < radius ; y += 1.0)
+            for (x = -radius ; x < radius ; x += 1.0)
             {
-	            s += shadowLookup(depths, layer, coord, vec2(x, y + yshift));
+                s += shadowLookup(depths, layer, coord, vec2(x, y + yshift));
             }
-	        s /= radius * radius * 4.0;
+            s /= radius * radius * 4.0;
             return s;
         }
-        
+
         float weight(in vec4 tc, in float coef)
         {
             vec2 proj = vec2(tc.x / tc.w, tc.y / tc.w);
@@ -166,12 +165,12 @@ class DeferredEnvironmentPass: Owner
             proj = clamp(proj, 0.0, 1.0);
             return min(proj.x, proj.y);
         }
-        
+
         float rescale(float x, float mi, float ma)
         {
             return (max(x, mi) - mi) / (ma - mi);
         }
-        
+
         float sigmoid(float x, float k)
         {
             float s = (x + x * k - k * 0.5 - 0.5) / (abs(x * k * 4.0 - k * 2.0) - k + 1.0) + 0.5;
@@ -187,7 +186,7 @@ class DeferredEnvironmentPass: Owner
             vec3 env2 = mix(env1, skyZenithColor * skyEnergy, horizonOrZenith);
             return env2;
         }
-        
+
         vec3 fresnel(float cosTheta, vec3 f0)
         {
             return f0 + (1.0 - f0) * pow(1.0 - cosTheta, 5.0);
@@ -197,7 +196,7 @@ class DeferredEnvironmentPass: Owner
         {
             return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - cosTheta, 5.0);
         }
-        
+
         float distributionGGX(vec3 N, vec3 H, float roughness)
         {
             float a = roughness * roughness;
@@ -227,7 +226,7 @@ class DeferredEnvironmentPass: Owner
             float ggx1  = geometrySchlickGGX(NdotL, roughness);
             return ggx1 * ggx2;
         }
-        
+
         vec2 envMapEquirect(vec3 dir)
         {
             float phi = acos(dir.y);
@@ -244,7 +243,7 @@ class DeferredEnvironmentPass: Owner
             noiseZ = clamp(fract(sin(dot(coord, vec2(12.9898, 78.233)*3.0)) * 43758.5453), 0.0, 1.0) * 2.0 - 1.0;
             return vec3(noiseX, noiseY, noiseZ) * noiseamount;
         }
-        
+
         const vec3 uKernelOffsets[10] = vec3[](
             vec3(-0.010735935, 0.01647018, 0.0062425877),
             vec3(-0.06533369, 0.3647007, -0.13746321),
@@ -256,18 +255,18 @@ class DeferredEnvironmentPass: Owner
             vec3(0.019100213, 0.29652783, 0.066237666),
             vec3(0.8765323, 0.011236004, 0.28265962),
             vec3(0.29264435, -0.40794238, 0.15964167));
-            
+
         const int SSAO_SAMPLE_COUNT = 8;
-        
+
         // TODO: make uniform
         const float ssaoRadius = 0.5;
         const float ssaoFalloff = 100.0;
-        
+
         vec3 toLinear(vec3 v)
         {
             return pow(v, vec3(2.2));
         }
-        
+
         float luminance(vec3 color)
         {
             return (
@@ -276,22 +275,22 @@ class DeferredEnvironmentPass: Owner
                 color.z * 0.06
             );
         }
-        
+
         void main()
         {
             vec2 invViewSize = 1.0 / viewSize;
-            
+
             vec4 col = texture(colorBuffer, texCoord);
-            
+
             if (col.a < 1.0)
                 discard;
-            
+
             vec3 albedo = toLinear(col.rgb);
-            
+
             vec4 rms = texture(rmsBuffer, texCoord);
             float roughness = rms.r;
             float metallic = rms.g;
-            
+
             vec3 eyePos = texture(positionBuffer, texCoord).xyz;
             vec3 N = normalize(texture(normalBuffer, texCoord).xyz);
             vec3 E = normalize(-eyePos);
@@ -303,26 +302,27 @@ class DeferredEnvironmentPass: Owner
             vec3 worldN = normalize(N * mat3(camViewMatrix));
             vec3 worldR = reflect(worldView, worldN);
             vec3 worldSun = sunDirection * mat3(camViewMatrix);
-        
+
             vec4 posShifted = vec4(eyePos, 1.0) + vec4(N * eyeSpaceNormalShift, 0.0);
-            vec4 shadowCoord1 = shadowMatrix1 * posShifted;
-            vec4 shadowCoord2 = shadowMatrix2 * posShifted;
-            vec4 shadowCoord3 = shadowMatrix3 * posShifted;
-            
-            // Calculate shadow from 3 cascades           
-            float s1, s2, s3;
-            {            
-                s1 = shadowPCF(shadowTextureArray, 0.0, shadowCoord1, 2.0, 0.0);
-                s2 = shadow(shadowTextureArray, 1.0, shadowCoord2, 0.0);
-                s3 = shadow(shadowTextureArray, 2.0, shadowCoord3, 0.0);
-                float w1 = weight(shadowCoord1, 8.0);
-                float w2 = weight(shadowCoord2, 8.0);
-                float w3 = weight(shadowCoord3, 8.0);
-                s3 = mix(1.0, s3, w3); 
-                s2 = mix(s3, s2, w2);
-                s1 = mix(s2, s1, w1); // s1 stores resulting shadow value
+            vec4 shadowCoord[numShadowAreas];
+            for(int i=0;i<numShadowAreas;i++)
+                shadowCoord[i] = shadowMatrix[i] * posShifted;
+
+            // Calculate shadow from numShadowAreas cascades
+            float s[numShadowAreas];
+            {
+                s[0] = shadowPCF(shadowTextureArray, 0.0, shadowCoord[0], 2.0, 0.0);
+                for(int i=1;i<numShadowAreas;i++)
+                    s[i] = shadow(shadowTextureArray, i, shadowCoord[i], 0.0);
+                float w[3];
+                for(int i=0;i<numShadowAreas;i++)
+                    w[i] = weight(shadowCoord[i], 8.0);
+                float cur=1.0;
+                for(int i=numShadowAreas;i-->0;)
+                    cur = mix(cur, s[i], w[i]);
+                s[0] = cur; // s[0] stores resulting shadow value
             }
-            
+
             // SSAO
             float occlusion = 1.0;
             if (enableSSAO)
@@ -340,7 +340,7 @@ class DeferredEnvironmentPass: Owner
 
                     vec4 projSamplePos = camProjectionMatrix * vec4(samplePos, 1.0);
                     vec2 sampleUV = (projSamplePos.xy / projSamplePos.w) * 0.5 + 0.5;
-                    
+
                     vec3 dstPosition = texture(positionBuffer, sampleUV).xyz;
                     vec3 positionVec = dstPosition - samplePos;
 
@@ -352,22 +352,22 @@ class DeferredEnvironmentPass: Owner
                 }
                 occlusion = clamp(1.0 - occlusion, 0.0, 1.0);
             }
-            
+
             vec3 radiance = vec3(0.0, 0.0, 0.0);
-            
-            vec3 f0 = vec3(0.04); 
+
+            vec3 f0 = vec3(0.04);
             f0 = mix(f0, albedo, metallic);
-            
+
             // Sun light
             {
                 vec3 L = sunDirection;
-                float NL = max(dot(N, L), 0.0); 
-                vec3 H = normalize(E + L); 
-                
-                float NDF = distributionGGX(N, H, roughness);        
+                float NL = max(dot(N, L), 0.0);
+                vec3 H = normalize(E + L);
+
+                float NDF = distributionGGX(N, H, roughness);
                 float G = geometrySmith(N, E, L, roughness);
                 vec3 F = fresnel(max(dot(H, E), 0.0), f0);
-                
+
                 vec3 kS = F;
                 vec3 kD = vec3(1.0) - kS;
                 kD *= 1.0 - metallic;
@@ -376,9 +376,9 @@ class DeferredEnvironmentPass: Owner
                 float denominator = 4.0 * max(dot(N, E), 0.0) * NL;
                 vec3 specular = numerator / max(denominator, 0.001);
 
-                radiance += (kD * albedo / PI + specular) * sunColor * sunEnergy * s1 * NL;
+                radiance += (kD * albedo / PI + specular) * sunColor * sunEnergy * s[0] * NL;
             }
-            
+
             // Ambient light
             vec3 ambientDiffuse;
             vec3 ambientSpecular;
@@ -388,7 +388,7 @@ class DeferredEnvironmentPass: Owner
                 float maxLod = log2(float(max(envMapSize.x, envMapSize.y))) - 2.0;
                 float diffLod = maxLod - 1.0;
                 float specLod = maxLod * roughness;
-                    
+
                 ambientDiffuse = textureLod(environmentMap, envMapEquirect(worldN), diffLod).rgb;
                 ambientSpecular = textureLod(environmentMap, envMapEquirect(worldR), specLod).rgb;
             }
@@ -397,7 +397,7 @@ class DeferredEnvironmentPass: Owner
                 ambientDiffuse = sky(worldN, worldSun, 1.0);
                 ambientSpecular = sky(worldR, worldSun, roughness);
             }
-            
+
             vec3 F = fresnelRoughness(max(dot(N, E), 0.0), f0, roughness);
             vec3 kS = F;
             vec3 kD = 1.0 - kS;
@@ -405,13 +405,13 @@ class DeferredEnvironmentPass: Owner
             vec3 diffuse = ambientDiffuse * albedo;
             vec3 ambient = kD * diffuse + F * ambientSpecular;
             radiance += ambient;
-            
+
             // Emission
             radiance += texture(emissionBuffer, texCoord).rgb;
-            
+
             // Occlusion
             radiance *= occlusion;
-            
+
             // Fog
             float linearDepth = abs(eyePos.z);
             float fogFactor = clamp((fogEnd - linearDepth) / (fogEnd - fogStart), 0.0, 1.0);
@@ -421,22 +421,22 @@ class DeferredEnvironmentPass: Owner
             frag_luminance = vec4(luminance(radiance), 0.0, 0.0, 1.0);
         }
     ";
-    
+
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
-    
+
     GLint colorBufferLoc;
     GLint rmsBufferLoc;
     GLint positionBufferLoc;
     GLint normalBufferLoc;
     GLint emissionBufferLoc;
-    
+
     GLint viewportSizeLoc;
-    
+
     GLint sunDirectionLoc;
     GLint sunColorLoc;
     GLint sunEnergyLoc;
-    
+
     GLint skyZenithColorLoc;
     GLint skyHorizonColorLoc;
     GLint skyEnergyLoc;
@@ -445,56 +445,54 @@ class DeferredEnvironmentPass: Owner
     GLint fogStartLoc;
     GLint fogEndLoc;
     GLint fogColorLoc;
-    
-    GLint shadowMatrix1Loc;
-    GLint shadowMatrix2Loc; 
-    GLint shadowMatrix3Loc;
+
+    GLint shadowMatrixLoc;
     GLint shadowTextureArrayLoc;
     GLint shadowTextureSizeLoc;
-    
+
     GLint environmentMapLoc;
     GLint useEnvironmentMapLoc;
-    
+
     GLint camProjectionMatrixLoc;
     GLint camViewMatrixLoc;
     GLint camInvViewMatrixLoc;
-    
+
     GLint enableSSAOLoc;
-    
+
     GBuffer gbuffer;
     CascadedShadowMap shadowMap;
     bool enableSSAO = false;
-    
+
     Matrix4x4f defaultShadowMatrix;
 
     this(GBuffer gbuffer, CascadedShadowMap shadowMap, Owner o)
     {
         super(o);
-        
+
         this.gbuffer = gbuffer;
         this.shadowMap = shadowMap;
-        
+
         vertices[0] = Vector2f(0, 0);
         vertices[1] = Vector2f(0, 1);
         vertices[2] = Vector2f(1, 0);
         vertices[3] = Vector2f(1, 1);
-        
+
         texcoords[0] = Vector2f(0, 1);
         texcoords[1] = Vector2f(0, 0);
         texcoords[2] = Vector2f(1, 1);
         texcoords[3] = Vector2f(1, 0);
-        
+
         indices[0][0] = 0;
         indices[0][1] = 1;
         indices[0][2] = 2;
-        
+
         indices[1][0] = 2;
         indices[1][1] = 1;
         indices[1][2] = 3;
-        
+
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 2, vertices.ptr, GL_STATIC_DRAW); 
+        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 2, vertices.ptr, GL_STATIC_DRAW);
 
         glGenBuffers(1, &tbo);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
@@ -507,20 +505,20 @@ class DeferredEnvironmentPass: Owner
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
-    
+
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
-    
+
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, null);
 
         glBindVertexArray(0);
-        
+
         const(char*)pvs = envPassVsText.ptr;
         const(char*)pfs = envPassFsText.ptr;
-        
+
         char[1000] infobuffer = 0;
         int infobufferlen = 0;
 
@@ -556,22 +554,22 @@ class DeferredEnvironmentPass: Owner
         glAttachShader(envPassShaderProgram, envPassShaderVert);
         glAttachShader(envPassShaderProgram, envPassShaderFrag);
         glLinkProgram(envPassShaderProgram);
-        
+
         modelViewMatrixLoc = glGetUniformLocation(envPassShaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(envPassShaderProgram, "projectionMatrix");
 
         viewportSizeLoc = glGetUniformLocation(envPassShaderProgram, "viewSize");
-        
+
         colorBufferLoc = glGetUniformLocation(envPassShaderProgram, "colorBuffer");
         rmsBufferLoc = glGetUniformLocation(envPassShaderProgram, "rmsBuffer");
         positionBufferLoc = glGetUniformLocation(envPassShaderProgram, "positionBuffer");
         normalBufferLoc = glGetUniformLocation(envPassShaderProgram, "normalBuffer");
         emissionBufferLoc = glGetUniformLocation(envPassShaderProgram, "emissionBuffer");
-        
+
         sunDirectionLoc = glGetUniformLocation(envPassShaderProgram, "sunDirection");
         sunColorLoc = glGetUniformLocation(envPassShaderProgram, "sunColor");
         sunEnergyLoc = glGetUniformLocation(envPassShaderProgram, "sunEnergy");
-     
+
         skyZenithColorLoc = glGetUniformLocation(envPassShaderProgram, "skyZenithColor");
         skyHorizonColorLoc = glGetUniformLocation(envPassShaderProgram, "skyHorizonColor");
         skyEnergyLoc = glGetUniformLocation(envPassShaderProgram, "skyEnergy");
@@ -580,23 +578,21 @@ class DeferredEnvironmentPass: Owner
         fogStartLoc = glGetUniformLocation(envPassShaderProgram, "fogStart");
         fogEndLoc = glGetUniformLocation(envPassShaderProgram, "fogEnd");
         fogColorLoc = glGetUniformLocation(envPassShaderProgram, "fogColor");
-        
-        shadowMatrix1Loc = glGetUniformLocation(envPassShaderProgram, "shadowMatrix1");
-        shadowMatrix2Loc = glGetUniformLocation(envPassShaderProgram, "shadowMatrix2");
-        shadowMatrix3Loc = glGetUniformLocation(envPassShaderProgram, "shadowMatrix3");
+
+        shadowMatrixLoc = glGetUniformLocation(envPassShaderProgram, "shadowMatrix");
         shadowTextureArrayLoc = glGetUniformLocation(envPassShaderProgram, "shadowTextureArray");
         shadowTextureSizeLoc = glGetUniformLocation(envPassShaderProgram, "shadowTextureSize");
-        
+
         environmentMapLoc = glGetUniformLocation(envPassShaderProgram, "environmentMap");
         useEnvironmentMapLoc = glGetUniformLocation(envPassShaderProgram, "useEnvironmentMap");
-        
+
         enableSSAOLoc = glGetUniformLocation(envPassShaderProgram, "enableSSAO");
-        
+
         camProjectionMatrixLoc = glGetUniformLocation(envPassShaderProgram, "camProjectionMatrix");
         camViewMatrixLoc = glGetUniformLocation(envPassShaderProgram, "camViewMatrix");
         camInvViewMatrixLoc = glGetUniformLocation(envPassShaderProgram, "camInvViewMatrix");
     }
-    
+
     ~this()
     {
         glDeleteVertexArrays(1, &vao);
@@ -604,16 +600,16 @@ class DeferredEnvironmentPass: Owner
         glDeleteBuffers(1, &tbo);
         glDeleteBuffers(1, &eao);
     }
-    
+
     void render(RenderingContext* rc2d, RenderingContext* rc3d)
-    {    
+    {
         glUseProgram(envPassShaderProgram);
-        
+
         glUniformMatrix4fv(modelViewMatrixLoc, 1, 0, rc2d.viewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, 0, rc2d.projectionMatrix.arrayof.ptr);
-        
+
         Vector2f viewportSize;
-        
+
         viewportSize = Vector2f(rc3d.eventManager.windowWidth, rc3d.eventManager.windowHeight);
         glUniform2fv(viewportSizeLoc, 1, viewportSize.arrayof.ptr);
 
@@ -629,17 +625,17 @@ class DeferredEnvironmentPass: Owner
         {
             sunVector = Vector4f(rc3d.environment.sunDirection);
             sunVector.w = 0.0;
-            
+
             sunColor = rc3d.environment.sunColor;
             sunEnergy = rc3d.environment.sunEnergy;
-            
+
             skyZenithColor = rc3d.environment.skyZenithColor;
             skyHorizonColor = rc3d.environment.skyHorizonColor;
             groundColor = rc3d.environment.groundColor;
             skyEnergy = rc3d.environment.skyEnergy;
             groundEnergy = rc3d.environment.groundEnergy;
         }
-        
+
         Vector3f sunDirectionEye = sunVector * rc3d.viewMatrix;
         glUniform3fv(sunDirectionLoc, 1, sunDirectionEye.arrayof.ptr);
         glUniform3fv(sunColorLoc, 1, sunColor.arrayof.ptr);
@@ -650,14 +646,14 @@ class DeferredEnvironmentPass: Owner
         glUniform1f(skyEnergyLoc, skyEnergy);
         glUniform3fv(groundColorLoc, 1, groundColor.arrayof.ptr);
         glUniform1f(groundEnergyLoc, groundEnergy);
-        
+
         Color4f fogColor = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
         float fogStart = float.max;
         float fogEnd = float.max;
         //if (fogEnabled) // TODO: control fog
         {
             if (rc3d.environment)
-            {                
+            {
                 fogColor = rc3d.environment.fogColor;
                 fogStart = rc3d.environment.fogStart;
                 fogEnd = rc3d.environment.fogEnd;
@@ -666,31 +662,31 @@ class DeferredEnvironmentPass: Owner
         glUniform3fv(fogColorLoc, 1, fogColor.arrayof.ptr);
         glUniform1f(fogStartLoc, fogStart);
         glUniform1f(fogEndLoc, fogEnd);
-        
+
         glUniformMatrix4fv(camProjectionMatrixLoc, 1, 0, rc3d.projectionMatrix.arrayof.ptr);
         glUniformMatrix4fv(camViewMatrixLoc, 1, 0, rc3d.viewMatrix.arrayof.ptr);
         glUniformMatrix4fv(camInvViewMatrixLoc, 1, 0, rc3d.invViewMatrix.arrayof.ptr);
-        
+
         // Texture 0 - color buffer
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gbuffer.colorTexture);
         glUniform1i(colorBufferLoc, 0);
-        
+
         // Texture 1 - roughness-metallic-specularity buffer
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gbuffer.rmsTexture);
         glUniform1i(rmsBufferLoc, 1);
-        
+
         // Texture 2 - position buffer
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gbuffer.positionTexture);
         glUniform1i(positionBufferLoc, 2);
-        
+
         // Texture 3 - normal buffer
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, gbuffer.normalTexture);
         glUniform1i(normalBufferLoc, 3);
-        
+
         // Texture 4 - environment map
         bool useEnvmap = false;
         if (rc3d.environment)
@@ -709,12 +705,12 @@ class DeferredEnvironmentPass: Owner
             glUniform1i(useEnvironmentMapLoc, 0);
         }
         glUniform1i(environmentMapLoc, 4);
-        
+
         // Texture 5 - emission buffer
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, gbuffer.emissionTexture);
         glUniform1i(emissionBufferLoc, 5);
-        
+
         // Texture 8 - shadow map cascades (3 layer texture array)
         if (shadowMap)
         {
@@ -722,19 +718,17 @@ class DeferredEnvironmentPass: Owner
             glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMap.depthTexture);
             glUniform1i(shadowTextureArrayLoc, 7);
             glUniform1f(shadowTextureSizeLoc, cast(float)shadowMap.size);
-            glUniformMatrix4fv(shadowMatrix1Loc, 1, 0, shadowMap.area[0].shadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix2Loc, 1, 0, shadowMap.area[1].shadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix3Loc, 1, 0, shadowMap.area[2].shadowMatrix.arrayof.ptr);
+            foreach(GLint i;0..shadowMap.area.length)
+                glUniformMatrix4fv(shadowMatrixLoc+i, 1, 0, shadowMap.area[i].shadowMatrix.arrayof.ptr);
         }
         else
-        {        
-            glUniformMatrix4fv(shadowMatrix1Loc, 1, 0, defaultShadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix2Loc, 1, 0, defaultShadowMatrix.arrayof.ptr);
-            glUniformMatrix4fv(shadowMatrix3Loc, 1, 0, defaultShadowMatrix.arrayof.ptr);
+        {
+            foreach(GLint i;0..typeof(shadowMap).area.length)
+                glUniformMatrix4fv(shadowMatrixLoc+i, 1, 0, defaultShadowMatrix.arrayof.ptr);
         }
 
         glUniform1i(enableSSAOLoc, enableSSAO);
-        
+
         glActiveTexture(GL_TEXTURE0);
 
         glDisable(GL_DEPTH_TEST);
@@ -747,27 +741,27 @@ class DeferredEnvironmentPass: Owner
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        
+
         glUseProgram(0);
     }
 }
@@ -777,52 +771,52 @@ class DeferredLightPass: Owner
     Vector2f[4] vertices;
     Vector2f[4] texcoords;
     uint[3][2] indices;
-    
+
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint tbo = 0;
     GLuint eao = 0;
-    
+
     GLenum lightPassShaderVert;
     GLenum lightPassShaderFrag;
     GLenum lightPassShaderProgram;
-    
-    private string lightPassVsText = 
+
+    private string lightPassVsText =
     "
         #version 330 core
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
         uniform vec2 viewSize;
-        
+
         layout (location = 0) in vec3 va_Vertex;
-        
+
         void main()
         {
             gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex, 1.0);
         }
     ";
-    
+
     private string lightPassFsText =
     "
         #version 330 core
-        
+
         #define PI 3.14159265359
-        
+
         uniform sampler2D colorBuffer;
         uniform sampler2D rmsBuffer;
         uniform sampler2D positionBuffer;
         uniform sampler2D normalBuffer;
-        
+
         uniform vec2 viewSize;
-        
+
         uniform vec3 lightPosition;
         uniform float lightRadius;
         uniform float lightAreaRadius;
         uniform vec3 lightColor;
         uniform float lightEnergy;
-        
+
         layout(location = 0) out vec4 frag_color;
         layout(location = 1) out vec4 frag_luminance;
 
@@ -835,7 +829,7 @@ class DeferredLightPass: Owner
         {
             return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - cosTheta, 5.0);
         }
-        
+
         float distributionGGX(vec3 N, vec3 H, float roughness)
         {
             float a = roughness * roughness;
@@ -865,12 +859,12 @@ class DeferredLightPass: Owner
             float ggx1  = geometrySchlickGGX(NdotL, roughness);
             return ggx1 * ggx2;
         }
-        
+
         vec3 toLinear(vec3 v)
         {
             return pow(v, vec3(2.2));
         }
-        
+
         float luminance(vec3 color)
         {
             return (
@@ -879,47 +873,47 @@ class DeferredLightPass: Owner
                 color.z * 0.06
             );
         }
-        
+
         void main()
         {
             vec2 texCoord = gl_FragCoord.xy / viewSize;
-            
+
             vec4 col = texture(colorBuffer, texCoord);
-            
+
             if (col.a < 1.0)
                 discard;
-            
+
             vec3 albedo = toLinear(col.rgb);
-            
+
             vec4 rms = texture(rmsBuffer, texCoord);
             float roughness = rms.r;
             float metallic = rms.g;
-            
+
             vec3 eyePos = texture(positionBuffer, texCoord).xyz;
             vec3 N = normalize(texture(normalBuffer, texCoord).xyz);
             vec3 E = normalize(-eyePos);
             vec3 R = reflect(E, N);
-            
-            vec3 f0 = vec3(0.04); 
+
+            vec3 f0 = vec3(0.04);
             f0 = mix(f0, albedo, metallic);
-            
+
             vec3 positionToLightSource = lightPosition - eyePos;
-            float distanceToLight = length(positionToLightSource);           
+            float distanceToLight = length(positionToLightSource);
             float attenuation = pow(clamp(1.0 - (distanceToLight / lightRadius), 0.0, 1.0), 2.0) * lightEnergy;
-            
+
             vec3 Lpt = normalize(positionToLightSource);
 
             vec3 centerToRay = dot(positionToLightSource, R) * R - positionToLightSource;
             vec3 closestPoint = positionToLightSource + centerToRay * clamp(lightAreaRadius / length(centerToRay), 0.0, 1.0);
-            vec3 L = normalize(closestPoint);  
+            vec3 L = normalize(closestPoint);
 
-            float NL = max(dot(N, Lpt), 0.0); 
+            float NL = max(dot(N, Lpt), 0.0);
             vec3 H = normalize(E + L);
-                    
-            float NDF = distributionGGX(N, H, roughness);        
-            float G = geometrySmith(N, E, L, roughness);      
+
+            float NDF = distributionGGX(N, H, roughness);
+            float G = geometrySmith(N, E, L, roughness);
             vec3 F = fresnel(max(dot(H, E), 0.0), f0);
-                    
+
             vec3 kS = F;
             vec3 kD = vec3(1.0) - kS;
             kD *= 1.0 - metallic;
@@ -927,30 +921,30 @@ class DeferredLightPass: Owner
             vec3 numerator = NDF * G * F;
             float denominator = 4.0 * max(dot(N, E), 0.0) * NL;
             vec3 specular = numerator / max(denominator, 0.001);
-                    
+
             vec3 radiance = (kD * albedo / PI + specular) * lightColor * attenuation * NL;
 
             frag_color = vec4(radiance, 1.0);
             frag_luminance = vec4(luminance(radiance), 0.0, 0.0, 1.0);
         }
     ";
-    
+
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
-    
+
     GLint colorBufferLoc;
     GLint rmsBufferLoc;
     GLint positionBufferLoc;
     GLint normalBufferLoc;
-    
+
     GLint viewportSizeLoc;
-    
+
     GLint lightPositionLoc;
     GLint lightRadiusLoc;
     GLint lightAreaRadiusLoc;
     GLint lightColorLoc;
     GLint lightEnergyLoc;
-    
+
     GBuffer gbuffer;
     LightManager lightManager;
     ShapeSphere lightVolume;
@@ -958,32 +952,32 @@ class DeferredLightPass: Owner
     this(GBuffer gbuffer, LightManager lightManager, Owner o)
     {
         super(o);
-        
+
         this.gbuffer = gbuffer;
         this.lightManager = lightManager;
         this.lightVolume = New!ShapeSphere(1.0f, 8, 4, false, this);
-        
+
         vertices[0] = Vector2f(0, 0);
         vertices[1] = Vector2f(0, 1);
         vertices[2] = Vector2f(1, 0);
         vertices[3] = Vector2f(1, 1);
-        
+
         texcoords[0] = Vector2f(0, 1);
         texcoords[1] = Vector2f(0, 0);
         texcoords[2] = Vector2f(1, 1);
         texcoords[3] = Vector2f(1, 0);
-        
+
         indices[0][0] = 0;
         indices[0][1] = 1;
         indices[0][2] = 2;
-        
+
         indices[1][0] = 2;
         indices[1][1] = 1;
         indices[1][2] = 3;
-        
+
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 2, vertices.ptr, GL_STATIC_DRAW); 
+        glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof * 2, vertices.ptr, GL_STATIC_DRAW);
 
         glGenBuffers(1, &tbo);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
@@ -996,20 +990,20 @@ class DeferredLightPass: Owner
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
-    
+
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
-    
+
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, null);
 
         glBindVertexArray(0);
-        
+
         const(char*)pvs = lightPassVsText.ptr;
         const(char*)pfs = lightPassFsText.ptr;
-        
+
         char[1000] infobuffer = 0;
         int infobufferlen = 0;
 
@@ -1045,24 +1039,24 @@ class DeferredLightPass: Owner
         glAttachShader(lightPassShaderProgram, lightPassShaderVert);
         glAttachShader(lightPassShaderProgram, lightPassShaderFrag);
         glLinkProgram(lightPassShaderProgram);
-        
+
         modelViewMatrixLoc = glGetUniformLocation(lightPassShaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(lightPassShaderProgram, "projectionMatrix");
 
         viewportSizeLoc = glGetUniformLocation(lightPassShaderProgram, "viewSize");
-        
+
         colorBufferLoc = glGetUniformLocation(lightPassShaderProgram, "colorBuffer");
         rmsBufferLoc = glGetUniformLocation(lightPassShaderProgram, "rmsBuffer");
         positionBufferLoc = glGetUniformLocation(lightPassShaderProgram, "positionBuffer");
         normalBufferLoc = glGetUniformLocation(lightPassShaderProgram, "normalBuffer");
-        
+
         lightPositionLoc = glGetUniformLocation(lightPassShaderProgram, "lightPosition");
         lightRadiusLoc = glGetUniformLocation(lightPassShaderProgram, "lightRadius");
         lightEnergyLoc = glGetUniformLocation(lightPassShaderProgram, "lightEnergy");
         lightAreaRadiusLoc = glGetUniformLocation(lightPassShaderProgram, "lightAreaRadius");
         lightColorLoc = glGetUniformLocation(lightPassShaderProgram, "lightColor");
     }
-    
+
     ~this()
     {
         glDeleteVertexArrays(1, &vao);
@@ -1070,15 +1064,15 @@ class DeferredLightPass: Owner
         glDeleteBuffers(1, &tbo);
         glDeleteBuffers(1, &eao);
     }
-    
+
     void render(RenderingContext* rc2d, RenderingContext* rc3d)
-    {    
+    {
         glUseProgram(lightPassShaderProgram);
 
         glUniformMatrix4fv(projectionMatrixLoc, 1, 0, rc3d.projectionMatrix.arrayof.ptr);
-        
+
         Vector2f viewportSize;
-        
+
         viewportSize = Vector2f(rc3d.eventManager.windowWidth, rc3d.eventManager.windowHeight);
         glUniform2fv(viewportSizeLoc, 1, viewportSize.arrayof.ptr);
 
@@ -1086,77 +1080,77 @@ class DeferredLightPass: Owner
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gbuffer.colorTexture);
         glUniform1i(colorBufferLoc, 0);
-        
+
         // Texture 1 - roughness-metallic-specularity buffer
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gbuffer.rmsTexture);
         glUniform1i(rmsBufferLoc, 1);
-        
+
         // Texture 2 - position buffer
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gbuffer.positionTexture);
         glUniform1i(positionBufferLoc, 2);
-        
+
         // Texture 3 - normal buffer
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, gbuffer.normalTexture);
         glUniform1i(normalBufferLoc, 3);
-        
+
         glActiveTexture(GL_TEXTURE0);
 
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
-        
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
-        
+
         glEnablei(GL_BLEND, 0);
         glEnablei(GL_BLEND, 1);
         glBlendFunci(0, GL_ONE, GL_ONE);
         glBlendFunci(1, GL_ONE, GL_ONE);
-        
+
         foreach(light; lightManager.lightSources.data)
         {
-            Matrix4x4f modelViewMatrix = 
+            Matrix4x4f modelViewMatrix =
                 rc3d.viewMatrix *
-                translationMatrix(light.position) * 
+                translationMatrix(light.position) *
                 scaleMatrix(Vector3f(light.radius, light.radius, light.radius));
             glUniformMatrix4fv(modelViewMatrixLoc, 1, 0, modelViewMatrix.arrayof.ptr);
-            
+
             Vector3f lightPositionEye = light.position * rc3d.viewMatrix;
-            
+
             glUniform3fv(lightPositionLoc, 1, lightPositionEye.arrayof.ptr);
             glUniform1f(lightRadiusLoc, light.radius);
             glUniform1f(lightAreaRadiusLoc, light.areaRadius);
             glUniform3fv(lightColorLoc, 1, light.color.arrayof.ptr);
             glUniform1f(lightEnergyLoc, light.energy);
-            
+
             lightVolume.render(rc3d);
         }
-        
+
         glDisablei(GL_BLEND, 0);
         glDisablei(GL_BLEND, 1);
-        
+
         glCullFace(GL_BACK);
         glDisable(GL_CULL_FACE);
-        
+
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        
+
         glUseProgram(0);
     }
 }

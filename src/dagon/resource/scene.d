@@ -850,7 +850,7 @@ class Scene: BaseScene
         sacSunMaterialBackend = New!SacSunBackend(assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
 
-        shadowMap = New!CascadedShadowMap(shadowMapResolution, this, 50, 200, 1280, -10000, 10000, assetManager);
+        shadowMap = New!CascadedShadowMap(shadowMapResolution, this, cast(float[3])[50, 200, 1280], -10000, 10000, assetManager);
 
         particleSystem = New!ParticleSystem(assetManager);
 
@@ -993,12 +993,12 @@ class Scene: BaseScene
                 Vector3f round(Vector3f a, float resolution){
                     return Vector3f(a.x-fmod(a.x,resolution), a.y-fmod(a.y,resolution), a.z-fmod(a.z,resolution));
                 }
-                auto res1=shadowMap.projSize1/shadowMapResolution*5;
-                shadowMap.area[0].position = round(view.cameraPosition + cameraDirection * (shadowMap.projSize1  * 0.48f - 1.0f), res1);
-                auto res2=shadowMap.projSize2/shadowMapResolution*10;
-                shadowMap.area[1].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize2 * 0.5f, res2);
-                auto res3=shadowMap.projSize3/shadowMapResolution*100;
-                shadowMap.area[2].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize3 * 0.5f, res3);
+                auto res1=shadowMap.projSize[0]/shadowMapResolution*5;
+                shadowMap.area[0].position = round(view.cameraPosition + cameraDirection * (shadowMap.projSize[0]  * 0.48f - 1.0f), res1);
+                foreach(i;1..shadowMap.projSize.length){
+	                auto res=shadowMap.projSize[i]/shadowMapResolution*(i==1?10:100);
+	                shadowMap.area[i].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize[i] * 0.5f, res);
+                }
                 //shadowMap.area[2].position = Vector3f(1280,1280,0);
             }
 

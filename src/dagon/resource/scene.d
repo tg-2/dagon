@@ -61,7 +61,6 @@ import dagon.graphics.shadow;
 import dagon.graphics.texture;
 import dagon.graphics.particles;
 import dagon.graphics.materials.generic;
-import dagon.graphics.materials.standard;
 import dagon.graphics.materials.bone;
 import dagon.graphics.materials.terrain2;
 import dagon.graphics.materials.shadeless;

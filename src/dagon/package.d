@@ -90,11 +90,9 @@ public
     import dagon.graphics.deferred;
     
     import dagon.graphics.materials.generic;
-    import dagon.graphics.materials.standard;
     import dagon.graphics.materials.shadeless;
     import dagon.graphics.materials.sky;
     import dagon.graphics.materials.hud;
-    import dagon.graphics.materials.terrain;
     import dagon.graphics.materials.terrain2;
     import dagon.graphics.materials.particle;
     

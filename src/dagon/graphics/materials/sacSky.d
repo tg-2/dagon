@@ -87,9 +87,9 @@ class SacSkyBackend: GLSLMaterialBackend
         in vec2 texCoord;
         
         layout(location = 0) out vec4 frag_color;
-        layout(location = 1) out vec4 frag_velocity;
-        layout(location = 2) out vec4 frag_luma;
-        layout(location = 3) out vec4 frag_position;
+        layout(location = 2) out vec4 frag_position;
+        layout(location = 4) out vec4 frag_velocity;
+        layout(location = 5) out vec4 frag_luma;
         
         float luminance(vec3 color)
         {

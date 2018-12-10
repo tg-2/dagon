@@ -92,10 +92,17 @@ class BoneMesh: Owner, Drawable
         }
     }
 
-    Vector3f getVertex(int i){
-        return weights[i].x*vertices[0][i]
-            + weights[i].y*vertices[1][i]
-            +weights[i].z*vertices[2][i];
+    final Vector3f getVertex(int i){
+        if(!pose.length) return getVertexNoTransform(i);
+        return weights[i].x*(vertices[0][i]*pose[boneIndices[i][0]]) // (dlib matrix multipy uses wrong convention...)
+            + weights[i].y*(vertices[1][i]*pose[boneIndices[i][1]])
+            + weights[i].z*(vertices[2][i]*pose[boneIndices[i][2]]);
+    }
+    final Vector3f getVertexNoTransform(int i){
+        if(!pose.length) return getVertexNoTransform(i);
+        return weights[i].x*vertices[0][i] // (dlib matrix multipy uses wrong convention...)
+	        + weights[i].y*vertices[1][i]
+	        + weights[i].z*vertices[2][i];
     }
 
     int opApply(scope int delegate(Triangle t) dg)
@@ -147,7 +154,10 @@ class BoneMesh: Owner, Drawable
 
         foreach(i, n; normals)
         {
-            normals[i] = n.normalized;
+            auto combinedTransform=(pose[boneIndices[i][0]]*weights[i].x+
+                                    pose[boneIndices[i][1]]*weights[i].y+
+                                    pose[boneIndices[i][2]]*weights[i].z);
+            normals[i] = combinedTransform.invRotate(n.normalized);
         }
     }
 

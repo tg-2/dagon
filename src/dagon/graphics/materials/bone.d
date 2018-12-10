@@ -72,9 +72,9 @@ class BoneBackend: GLSLMaterialBackend
         void main()
         {
             texCoord = va_Texcoord;
-            vec4 newNormal = pose[va_BoneIndices.x] * vec4(va_Normal, 0.0) * va_Weights.x
-                           + pose[va_BoneIndices.y] * vec4(va_Normal, 0.0) * va_Weights.y
-                           + pose[va_BoneIndices.z] * vec4(va_Normal, 0.0) * va_Weights.z;
+            vec4 newNormal = (pose[va_BoneIndices.x] * va_Weights.x
+                           +  pose[va_BoneIndices.y] * va_Weights.y
+                           +  pose[va_BoneIndices.z] * va_Weights.z) * vec4(va_Normal, 0.0);
             eyeNormal = (normalMatrix * newNormal).xyz;
             vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
                            + pose[va_BoneIndices.y] * vec4(va_Vertex1, 1.0) * va_Weights.y

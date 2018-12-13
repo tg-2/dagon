@@ -64,6 +64,7 @@ import dagon.graphics.materials.generic;
 import dagon.graphics.materials.bone;
 import dagon.graphics.materials.terrain2;
 import dagon.graphics.materials.shadeless;
+import dagon.graphics.materials.shadelessBone;
 import dagon.graphics.materials.sacSky;
 import dagon.graphics.materials.sacSun;
 import dagon.graphics.materials.sky;
@@ -353,8 +354,9 @@ class Scene: BaseScene
     BoneBackend boneMaterialBackend;
     TerrainBackend2 terrainMaterialBackend;
     ShadelessBackend shadelessMaterialBackend;
+    ShadelessBoneBackend shadelessBoneMaterialBackend;
     SacSkyBackend sacSkyMaterialBackend;
-	SacSunBackend sacSunMaterialBackend;
+    SacSunBackend sacSunMaterialBackend;
 
     SkyBackend skyMaterialBackend;
 
@@ -845,6 +847,7 @@ class Scene: BaseScene
         boneMaterialBackend = New!BoneBackend(assetManager);
         terrainMaterialBackend = New!TerrainBackend2(assetManager);
         shadelessMaterialBackend = New!ShadelessBackend(assetManager);
+        shadelessBoneMaterialBackend = New!ShadelessBoneBackend(assetManager);
         sacSkyMaterialBackend = New!SacSkyBackend(assetManager);
         sacSunMaterialBackend = New!SacSunBackend(assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);
@@ -962,8 +965,8 @@ class Scene: BaseScene
         timer += dt;
         if (view)
         {
-	        view.update(dt);
-	        view.prepareRC(&rc3d);
+            view.update(dt);
+            view.prepareRC(&rc3d);
         }
         while (timer >= fixedTimeStep)
         {
@@ -995,8 +998,8 @@ class Scene: BaseScene
                 auto res1=shadowMap.projSize[0]/shadowMapResolution*5;
                 shadowMap.area[0].position = round(view.cameraPosition + cameraDirection * (shadowMap.projSize[0]  * 0.48f - 1.0f), res1);
                 foreach(i;1..shadowMap.projSize.length){
-	                auto res=shadowMap.projSize[i]/shadowMapResolution*(i==1?10:100);
-	                shadowMap.area[i].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize[i] * 0.5f, res);
+                    auto res=shadowMap.projSize[i]/shadowMapResolution*(i==1?10:100);
+                    shadowMap.area[i].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize[i] * 0.5f, res);
                 }
                 //shadowMap.area[2].position = Vector3f(1280,1280,0);
             }

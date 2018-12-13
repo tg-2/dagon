@@ -99,7 +99,6 @@ class BoneMesh: Owner, Drawable
             + weights[i].z*(vertices[2][i]*pose[boneIndices[i][2]]);
     }
     final Vector3f getVertexNoTransform(int i){
-        if(!pose.length) return getVertexNoTransform(i);
         return weights[i].x*vertices[0][i] // (dlib matrix multipy uses wrong convention...)
 	        + weights[i].y*vertices[1][i]
 	        + weights[i].z*vertices[2][i];

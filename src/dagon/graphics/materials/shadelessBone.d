@@ -49,10 +49,10 @@ import dagon.graphics.materials.generic;
  */
 
 class ShadelessBoneBackend: GLSLMaterialBackend
-{    
+{
     private string vsText = "
         #version 450 core
-        
+
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
         layout (location = 2) in vec3 va_Vertex2;
@@ -60,15 +60,15 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         layout (location = 5) in uvec3 va_BoneIndices;
         layout (location = 6) in vec3 va_Weights;
         layout (location = 7) uniform mat4 pose[32];
-        
+
         out vec3 eyePosition;
         out vec2 texCoord;
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
-        
+
         uniform mat4 invViewMatrix;
-    
+
         void main()
         {
             vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
@@ -76,27 +76,27 @@ class ShadelessBoneBackend: GLSLMaterialBackend
                            + pose[va_BoneIndices.z] * vec4(va_Vertex2, 1.0) * va_Weights.z;
             vec4 pos = modelViewMatrix * vec4(newVertex.xyz, 1.0);
             eyePosition = pos.xyz;
-        
+
             texCoord = va_Texcoord;
             gl_Position = projectionMatrix * pos;
         }
     ";
-    
+
     private string fsText = "
         #version 330 core
-        
+
         uniform sampler2D diffuseTexture;
         uniform float alpha;
         uniform float energy;
-        
+
         in vec3 eyePosition;
         in vec2 texCoord;
-        
+
         layout(location = 0) out vec4 frag_color;
         layout(location = 2) out vec4 frag_position;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_luma;
-        
+
         float luminance(vec3 color)
         {
             return (
@@ -105,7 +105,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
                 color.z * 0.06
             );
         }
-        
+
         vec3 toLinear(vec3 v)
         {
             return pow(v, vec3(2.2));
@@ -120,39 +120,43 @@ class ShadelessBoneBackend: GLSLMaterialBackend
             frag_position = vec4(eyePosition, 0.0);
         }
     ";
-    
+
     override string vertexShaderSrc() {return vsText;}
     override string fragmentShaderSrc() {return fsText;}
 
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
-    
+
     GLint diffuseTextureLoc;
     GLint alphaLoc;
     GLint energyLoc;
-    
+
     this(Owner o)
     {
         super(o);
-        
+
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
-            
+
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
     }
-    
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;
         auto ienergy = "energy" in mat.inputs;
         auto itransparency = "transparency" in mat.inputs;
-        
+
         float energy = ienergy.asFloat;
 
         glUseProgram(shaderProgram);
-        
+
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
@@ -174,14 +178,14 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
     }
-    
+
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;
-        
+
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.unbind();
-    
+
         glUseProgram(0);
     }
 }

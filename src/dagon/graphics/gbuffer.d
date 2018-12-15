@@ -32,6 +32,7 @@ import std.math;
 
 import dlib.core.memory;
 import dlib.math.vector;
+import dlib.math.matrix;
 import dlib.image.color;
 import derelict.opengl;
 import dagon.core.ownership;
@@ -42,66 +43,66 @@ import dagon.resource.scene;
 
 class GeometryPassBackend: GLSLMaterialBackend
 {
-    string vsText = 
+    string vsText =
     "
         #version 330 core
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
         uniform mat4 normalMatrix;
-        
+
         uniform mat4 prevModelViewProjMatrix;
         uniform mat4 blurModelViewProjMatrix;
-        
+
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 1) in vec3 va_Normal;
         layout (location = 2) in vec2 va_Texcoord;
-        
+
         out vec2 texCoord;
         out vec3 eyePosition;
         out vec3 eyeNormal;
-        
+
         out vec4 blurPosition;
         out vec4 prevPosition;
-        
+
         void main()
         {
             texCoord = va_Texcoord;
             eyeNormal = (normalMatrix * vec4(va_Normal, 0.0)).xyz;
             vec4 pos = modelViewMatrix * vec4(va_Vertex, 1.0);
             eyePosition = pos.xyz;
-            
+
             vec4 position = projectionMatrix * pos;
-            
+
             blurPosition = blurModelViewProjMatrix * vec4(va_Vertex, 1.0);
             prevPosition = prevModelViewProjMatrix * vec4(va_Vertex, 1.0);
-            
+
             gl_Position = position;
         }
     ";
-    
+
     string fsText =
     "
         #version 330 core
-        
+
         uniform int layer;
-        
+
         uniform sampler2D diffuseTexture;
         uniform sampler2D normalTexture;
         uniform sampler2D rmsTexture;
         uniform sampler2D emissionTexture;
         uniform float emissionEnergy;
-        
+
         uniform int parallaxMethod;
         uniform float parallaxScale;
         uniform float parallaxBias;
-        
+
         uniform float blurMask;
-        
+
         in vec2 texCoord;
         in vec3 eyePosition;
         in vec3 eyeNormal;
-        
+
         in vec4 blurPosition;
         in vec4 prevPosition;
 
@@ -111,7 +112,7 @@ class GeometryPassBackend: GLSLMaterialBackend
         layout(location = 3) out vec4 frag_normal;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_emission;
-        
+
         mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
         {
             vec3 dp1 = dFdx(p);
@@ -140,31 +141,31 @@ class GeometryPassBackend: GLSLMaterialBackend
             vec3 N = normalize(eyeNormal);
             mat3 TBN = cotangentFrame(N, eyePosition, texCoord);
             vec3 tE = normalize(E * TBN);
-            
+
             vec2 posScreen = (blurPosition.xy / blurPosition.w) * 0.5 + 0.5;
             vec2 prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
             vec2 screenVelocity = posScreen - prevPosScreen;
-            
+
             // Parallax mapping
             float height = 0.0;
             vec2 shiftedTexCoord = texCoord;
             if (parallaxMethod == 1)
                 shiftedTexCoord = parallaxMapping(tE, texCoord, height);
-            
+
             // Normal mapping
             vec3 tN = normalize(texture(normalTexture, shiftedTexCoord).rgb * 2.0 - 1.0);
             tN.y = -tN.y;
             N = normalize(TBN * tN);
-            
+
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
             if (diffuseColor.a == 0)
                 discard;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
-            
+
             float geomMask = float(layer > 0);
-        
+
             frag_color = vec4(diffuseColor.rgb, geomMask);
             frag_rms = vec4(rms.r, rms.g, 1.0, 1.0);
             frag_position = vec4(eyePosition, geomMask);
@@ -173,7 +174,7 @@ class GeometryPassBackend: GLSLMaterialBackend
             frag_emission = vec4(emission, 1.0);
         }
     ";
-    
+
     override string vertexShaderSrc() {return vsText;}
     override string fragmentShaderSrc() {return fsText;}
 
@@ -182,10 +183,10 @@ class GeometryPassBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
     GLint normalMatrixLoc;
-    
+
     GLint prevModelViewProjMatrixLoc;
     GLint blurModelViewProjMatrixLoc;
-    
+
     GLint diffuseTextureLoc;
     GLint normalTextureLoc;
     GLint rmsTextureLoc;
@@ -195,35 +196,40 @@ class GeometryPassBackend: GLSLMaterialBackend
     GLint parallaxMethodLoc;
     GLint parallaxScaleLoc;
     GLint parallaxBiasLoc;
-    
+
     GLint blurMaskLoc;
-    
+
     this(Owner o)
     {
         super(o);
-        
+
         layerLoc = glGetUniformLocation(shaderProgram, "layer");
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         normalMatrixLoc = glGetUniformLocation(shaderProgram, "normalMatrix");
-        
+
         prevModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "prevModelViewProjMatrix");
         blurModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "blurModelViewProjMatrix");
-        
+
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         normalTextureLoc = glGetUniformLocation(shaderProgram, "normalTexture");
         rmsTextureLoc = glGetUniformLocation(shaderProgram, "rmsTexture");
         emissionTextureLoc = glGetUniformLocation(shaderProgram, "emissionTexture");
         emissionEnergyLoc = glGetUniformLocation(shaderProgram, "emissionEnergy");
-        
+
         parallaxMethodLoc = glGetUniformLocation(shaderProgram, "parallaxMethod");
         parallaxScaleLoc = glGetUniformLocation(shaderProgram, "parallaxScale");
         parallaxBiasLoc = glGetUniformLocation(shaderProgram, "parallaxBias");
-        
+
         blurMaskLoc = glGetUniformLocation(shaderProgram, "blurMask");
     }
-    
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+        glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;
@@ -234,26 +240,26 @@ class GeometryPassBackend: GLSLMaterialBackend
         auto imetallic = "metallic" in mat.inputs;
         auto iemission = "emission" in mat.inputs;
         auto iEnergy = "energy" in mat.inputs;
-        
+
         int parallaxMethod = intProp(mat, "parallax");
         if (parallaxMethod > ParallaxOcclusionMapping)
             parallaxMethod = ParallaxOcclusionMapping;
         if (parallaxMethod < 0)
             parallaxMethod = 0;
-        
+
         glUseProgram(shaderProgram);
-        
+
         glUniform1i(layerLoc, rc.layer);
-        
+
         glUniform1f(blurMaskLoc, rc.blurMask);
 
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, rc.normalMatrix.arrayof.ptr);
-        
+
         glUniformMatrix4fv(prevModelViewProjMatrixLoc, 1, GL_FALSE, rc.prevModelViewProjMatrix.arrayof.ptr);
         glUniformMatrix4fv(blurModelViewProjMatrixLoc, 1, GL_FALSE, rc.blurModelViewProjMatrix.arrayof.ptr);
-        
+
         // Texture 0 - diffuse texture
         if (idiffuse.texture is null)
         {
@@ -263,12 +269,12 @@ class GeometryPassBackend: GLSLMaterialBackend
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.bind();
         glUniform1i(diffuseTextureLoc, 0);
-        
+
         // Texture 1 - normal map + parallax map
         float parallaxScale = 0.03f;
         float parallaxBias = -0.01f;
         bool normalTexturePrepared = inormal.texture !is null;
-        if (normalTexturePrepared) 
+        if (normalTexturePrepared)
             normalTexturePrepared = inormal.texture.image.channels == 4;
         if (!normalTexturePrepared)
         {
@@ -291,22 +297,22 @@ class GeometryPassBackend: GLSLMaterialBackend
         glUniform1f(parallaxScaleLoc, parallaxScale);
         glUniform1f(parallaxBiasLoc, parallaxBias);
         glUniform1i(parallaxMethodLoc, parallaxMethod);
-        
+
         // Texture 2 - PBR maps (roughness + metallic)
         if (ipbr is null)
         {
             mat.setInput("pbr", 0.0f);
             ipbr = "pbr" in mat.inputs;
         }
-        
+
         if (ipbr.texture is null)
-        {       
+        {
             ipbr.texture = makeTextureFrom(mat, *iroughness, *imetallic, materialInput(0.0f), materialInput(0.0f));
         }
         glActiveTexture(GL_TEXTURE2);
         glUniform1i(rmsTextureLoc, 2);
         ipbr.texture.bind();
-        
+
         // Texture 3 - emission map
         if (iemission.texture is null)
         {
@@ -317,31 +323,31 @@ class GeometryPassBackend: GLSLMaterialBackend
         iemission.texture.bind();
         glUniform1i(emissionTextureLoc, 3);
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
-     
+
         glActiveTexture(GL_TEXTURE0);
     }
-    
+
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;
         auto inormal = "normal" in mat.inputs;
         auto ipbr = "pbr" in mat.inputs;
         auto iemission = "emission" in mat.inputs;
-    
+
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.unbind();
-        
+
         glActiveTexture(GL_TEXTURE1);
         inormal.texture.unbind();
-        
+
         glActiveTexture(GL_TEXTURE2);
         ipbr.texture.unbind();
-        
+
         glActiveTexture(GL_TEXTURE3);
         iemission.texture.unbind();
-        
+
         glActiveTexture(GL_TEXTURE0);
-    
+
         glUseProgram(0);
     }
 }
@@ -350,10 +356,10 @@ class GBuffer: Owner
 {
     uint width;
     uint height;
-    
+
     Scene scene;
     GeometryPassBackend geometryBackend;
-    
+
     GLuint fbo;
     GLuint depthTexture = 0;
     GLuint colorTexture = 0;
@@ -362,20 +368,20 @@ class GBuffer: Owner
     GLuint normalTexture = 0;
     GLuint velocityTexture = 0;
     GLuint emissionTexture = 0;
-    
+
     this(uint w, uint h, Scene scene, Owner o)
     {
         super(o);
-    
+
         width = w;
         height = h;
-        
+
         this.scene = scene;
-        
+
         geometryBackend = New!GeometryPassBackend(this);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        
+
         glGenTextures(1, &depthTexture);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -384,7 +390,7 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, null);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glGenTextures(1, &colorTexture);
         glBindTexture(GL_TEXTURE_2D, colorTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
@@ -393,7 +399,7 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glGenTextures(1, &rmsTexture);
         glBindTexture(GL_TEXTURE_2D, rmsTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, null);
@@ -411,7 +417,7 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
-            
+
         glGenTextures(1, &normalTexture);
         glBindTexture(GL_TEXTURE_2D, normalTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, null);
@@ -429,7 +435,7 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glGenTextures(1, &emissionTexture);
         glBindTexture(GL_TEXTURE_2D, emissionTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, null);
@@ -438,7 +444,7 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
@@ -451,19 +457,19 @@ class GBuffer: Owner
 
         GLenum[6] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5];
         glDrawBuffers(6, bufs.ptr);
-        
+
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE)
             writeln(status);
-        
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    
+
     ~this()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &fbo);
-        
+
         if (glIsTexture(depthTexture))
             glDeleteTextures(1, &depthTexture);
         if (glIsTexture(colorTexture))
@@ -479,34 +485,34 @@ class GBuffer: Owner
         if (glIsTexture(emissionTexture))
             glDeleteTextures(1, &emissionTexture);
     }
-    
+
     void bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
-    
+
     void unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    
+
     void render(RenderingContext* rc)
     {
         bind();
-        
+
         glViewport(0, 0, width, height);
         glScissor(0, 0, width, height);
         clear();
-        
+
         glEnable(GL_DEPTH_TEST);
-        
+
         auto rcLocal = *rc;
-        
+
         scene.renderOpaqueEntities3D(&rcLocal);
-        
+
         unbind();
     }
-    
+
     void clear()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

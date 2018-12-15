@@ -286,6 +286,11 @@ class TerrainBackend2: GLSLMaterialBackend
         glUniform1i(emissionTextureLoc, 3);
     }
 
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+        glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
         //auto inormal = "normal" in mat.inputs;

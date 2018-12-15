@@ -44,80 +44,80 @@ import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
 /*
- * Backend for skydome material. 
+ * Backend for skydome material.
  */
 
 class SkyBackend: GLSLMaterialBackend
-{    
+{
     private string vsText = "
         #version 330 core
-        
+
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 1) in vec3 va_Normal;
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 normalMatrix;
         uniform mat4 projectionMatrix;
         uniform mat4 invViewMatrix;
-        
+
         uniform mat4 prevModelViewProjMatrix;
         uniform mat4 blurModelViewProjMatrix;
-        
+
         out vec3 eyePosition;
-        
+
         out vec3 worldNormal;
-        
+
         out vec4 blurPosition;
         out vec4 prevPosition;
-    
+
         void main()
         {
             vec4 pos = modelViewMatrix * vec4(va_Vertex, 1.0);
             eyePosition = pos.xyz;
-        
+
             worldNormal = va_Normal;
-            
+
             blurPosition = blurModelViewProjMatrix * vec4(va_Vertex, 1.0);
             prevPosition = prevModelViewProjMatrix * vec4(va_Vertex, 1.0);
-            
+
             gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex, 1.0);
         }
     ";
-    
+
     private string fsText = "
         #version 330 core
-        
+
         #define EPSILON 0.000001
         #define PI 3.14159265
         const float PI2 = PI * 2.0;
-        
+
         uniform vec3 sunDirection;
         uniform vec3 skyZenithColor;
         uniform vec3 skyHorizonColor;
         uniform vec3 sunColor;
-        
+
         in vec3 eyePosition;
         in vec3 worldNormal;
-        
+
         in vec4 blurPosition;
         in vec4 prevPosition;
-        
+
         layout(location = 0) out vec4 frag_color;
         layout(location = 1) out vec4 frag_luma;
-        
+
         uniform vec3 groundColor;
         uniform float skyEnergy;
         uniform float groundEnergy;
         uniform float sunEnergy;
-        
+
         uniform sampler2D environmentMap;
         uniform bool useEnvironmentMap;
-        
+
         uniform bool showSun;
         uniform bool showSunHalo;
         uniform float sunSize;
         uniform float sunScattering;
-        
+
         float distributionGGX(vec3 N, vec3 H, float roughness)
         {
             float a = roughness * roughness;
@@ -129,19 +129,19 @@ class SkyBackend: GLSLMaterialBackend
             denom = PI * denom * denom;
             return num / denom;
         }
-        
+
         vec2 envMapEquirect(vec3 dir)
         {
             float phi = acos(dir.y);
             float theta = atan(dir.x, dir.z) + PI;
             return vec2(theta / PI2, phi / PI);
         }
-        
+
         vec3 toLinear(vec3 v)
         {
             return pow(v, vec3(2.2));
         }
-        
+
         float luminance(vec3 color)
         {
             return (
@@ -155,7 +155,7 @@ class SkyBackend: GLSLMaterialBackend
         {
             vec3 normalWorldN = normalize(worldNormal);
             vec3 env;
-            
+
             vec2 posScreen = (blurPosition.xy / blurPosition.w) * 0.5 + 0.5;
             vec2 prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
             vec2 screenVelocity = posScreen - prevPosScreen;
@@ -165,10 +165,10 @@ class SkyBackend: GLSLMaterialBackend
                 env = texture(environmentMap, envMapEquirect(-normalWorldN)).rgb;
             }
             else
-            {                
+            {
                 float horizonOrZenith = pow(clamp(dot(-normalWorldN, vec3(0, 1, 0)), 0.0, 1.0), 0.5);
                 float groundOrSky = pow(clamp(dot(-normalWorldN, vec3(0, -1, 0)), 0.0, 1.0), 0.4);
-                
+
                 env = mix(mix(skyHorizonColor * skyEnergy, groundColor * groundEnergy, groundOrSky), skyZenithColor * skyEnergy, horizonOrZenith);
                 float sun = clamp(dot(-normalWorldN, sunDirection), 0.0, 1.0);
                 vec3 H = normalize(-normalWorldN + sunDirection);
@@ -176,22 +176,22 @@ class SkyBackend: GLSLMaterialBackend
                 sun = min(float(sun > (1.0 - sunSize * 0.001)) + halo, 1.0);
                 env += sunColor * sun * sunEnergy;
             }
-            
+
             frag_color = vec4(env, 1.0);
             frag_luma = vec4(luminance(env));
         }
     ";
-    
+
     override string vertexShaderSrc() {return vsText;}
     override string fragmentShaderSrc() {return fsText;}
 
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
     GLint normalMatrixLoc;
-    
+
     GLint prevModelViewProjMatrixLoc;
     GLint blurModelViewProjMatrixLoc;
-    
+
     GLint locInvViewMatrix;
     GLint locSunDirection;
     GLint locSkyZenithColor;
@@ -201,28 +201,28 @@ class SkyBackend: GLSLMaterialBackend
     GLint locSunEnergy;
     GLint locGroundColor;
     GLint locGroundEnergy;
-    
+
     GLint environmentMapLoc;
     GLint useEnvironmentMapLoc;
-    
+
     bool useEnvironmentMap = true;
-    
+
     GLint showSunLoc;
     GLint showSunHaloLoc;
     GLint sunSizeLoc;
     GLint sunScatteringLoc;
-    
+
     this(Owner o)
     {
         super(o);
-        
+
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         normalMatrixLoc = glGetUniformLocation(shaderProgram, "normalMatrix");
-        
+
         prevModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "prevModelViewProjMatrix");
         blurModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "blurModelViewProjMatrix");
-            
+
         locInvViewMatrix = glGetUniformLocation(shaderProgram, "invViewMatrix");
         locSunDirection = glGetUniformLocation(shaderProgram, "sunDirection");
         locSkyZenithColor = glGetUniformLocation(shaderProgram, "skyZenithColor");
@@ -232,29 +232,38 @@ class SkyBackend: GLSLMaterialBackend
         locSunEnergy = glGetUniformLocation(shaderProgram, "sunEnergy");
         locGroundColor = glGetUniformLocation(shaderProgram, "groundColor");
         locGroundEnergy = glGetUniformLocation(shaderProgram, "groundEnergy");
-        
+
         environmentMapLoc = glGetUniformLocation(shaderProgram, "environmentMap");
         useEnvironmentMapLoc = glGetUniformLocation(shaderProgram, "useEnvironmentMap");
-        
+
         showSunLoc = glGetUniformLocation(shaderProgram, "showSun");
         showSunHaloLoc = glGetUniformLocation(shaderProgram, "showSunHalo");
         sunSizeLoc = glGetUniformLocation(shaderProgram, "sunSize");
         sunScatteringLoc = glGetUniformLocation(shaderProgram, "sunScattering");
     }
-    
+
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+        glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
+        //glUniformMatrix4fv(locInvViewMatrix, 1, GL_FALSE, rc.invViewMatrix.arrayof.ptr);
+        assert(0,"sacSkyBackend needs an invViewMatrix");
+    }
+
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
-    {    
+    {
         glUseProgram(shaderProgram);
-        
+
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, rc.normalMatrix.arrayof.ptr);
         glUniformMatrix4fv(locInvViewMatrix, 1, GL_FALSE, rc.invViewMatrix.arrayof.ptr);
-        
+
         glUniformMatrix4fv(prevModelViewProjMatrixLoc, 1, GL_FALSE, rc.prevModelViewProjMatrix.arrayof.ptr);
         glUniformMatrix4fv(blurModelViewProjMatrixLoc, 1, GL_FALSE, rc.blurModelViewProjMatrix.arrayof.ptr);
-        
+
         // Environment
         Vector3f sunVector = Vector4f(rc.environment.sunDirection);
         glUniform3fv(locSunDirection, 1, sunVector.arrayof.ptr);
@@ -266,12 +275,12 @@ class SkyBackend: GLSLMaterialBackend
         glUniform1f(locSkyEnergy, rc.environment.skyEnergy);
         glUniform3fv(locGroundColor, 1, rc.environment.groundColor.arrayof.ptr);
         glUniform1f(locGroundEnergy, rc.environment.groundEnergy);
-        
+
         // Texture 4 - environment map
         bool useEnvmap = false;
         if (rc.environment.environmentMap)
             useEnvmap = useEnvironmentMap;
-        
+
         if (useEnvmap)
         {
             glActiveTexture(GL_TEXTURE4);
@@ -283,13 +292,13 @@ class SkyBackend: GLSLMaterialBackend
             glUniform1i(useEnvironmentMapLoc, 0);
         }
         glUniform1i(environmentMapLoc, 4);
-        
+
         glUniform1i(showSunLoc, rc.environment.showSun);
         glUniform1i(showSunHaloLoc, rc.environment.showSunHalo);
         glUniform1f(sunSizeLoc, rc.environment.sunSize);
         glUniform1f(sunScatteringLoc, rc.environment.sunScattering);
     }
-    
+
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
         bool useEnvmap = false;
@@ -298,13 +307,13 @@ class SkyBackend: GLSLMaterialBackend
             if (rc.environment.environmentMap)
                 useEnvmap = true;
         }
-        
+
         if (useEnvmap)
         {
             glActiveTexture(GL_TEXTURE4);
             rc.environment.environmentMap.unbind();
         }
-        
+
         glUseProgram(0);
     }
 }

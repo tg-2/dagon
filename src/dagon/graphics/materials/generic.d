@@ -32,6 +32,8 @@ import std.algorithm;
 
 import dlib.core.memory;
 import dlib.math.vector;
+import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.image.color;
 import dlib.image.image;
 import dlib.image.unmanaged;
@@ -55,7 +57,7 @@ interface GenericMaterialBackend
         }
         return res;
     }
-    
+
     final int intProp(GenericMaterial mat, string prop)
     {
         auto p = prop in mat.inputs;
@@ -71,7 +73,7 @@ interface GenericMaterialBackend
         }
         return res;
     }
-    
+
     final Texture makeOnePixelTexture(Material mat, Color4f color)
     {
         auto img = New!UnmanagedImageRGBA8(8, 8);
@@ -79,7 +81,7 @@ interface GenericMaterialBackend
         auto tex = New!Texture(img, mat);
         return tex;
     }
-    
+
     final void packAlphaToTexture(Texture rgb, Texture alpha)
     {
         SuperImage rgbaImg = New!UnmanagedImageRGBA8(rgb.width, rgb.height);
@@ -90,11 +92,11 @@ interface GenericMaterialBackend
             col.a = alpha.image[x, y].r;
             rgbaImg[x, y] = col;
         }
-            
+
         rgb.release();
         rgb.createFromImage(rgbaImg);
     }
-    
+
     final void packAlphaToTexture(Texture rgb, float alpha)
     {
         SuperImage rgbaImg = New!UnmanagedImageRGBA8(rgb.width, rgb.height);
@@ -105,62 +107,72 @@ interface GenericMaterialBackend
             col.a = alpha;
             rgbaImg[x, y] = col;
         }
-            
+
         rgb.release();
         rgb.createFromImage(rgbaImg);
     }
-    
+
     final Texture makeTextureFrom(Material mat, MaterialInput r, MaterialInput g, MaterialInput b, MaterialInput a)
     {
         uint width = 8;
         uint height = 8;
-        
+
         if (r.texture !is null)
         {
             width = max(width, r.texture.width);
             height = max(height, r.texture.height);
         }
-        
+
         if (g.texture !is null)
         {
             width = max(width, g.texture.width);
             height = max(height, g.texture.height);
         }
-        
+
         if (b.texture !is null)
         {
             width = max(width, b.texture.width);
             height = max(height, b.texture.height);
         }
-        
+
         if (a.texture !is null)
         {
             width = max(width, a.texture.width);
             height = max(height, a.texture.height);
         }
-        
+
         SuperImage img = New!UnmanagedImageRGBA8(width, height);
-        
+
         foreach(y; 0..img.height)
         foreach(x; 0..img.width)
         {
             Color4f col = Color4f(0, 0, 0, 0);
-            
+
             float u = cast(float)x / cast(float)img.width;
             float v = cast(float)y / cast(float)img.height;
-            
+
             col.r = r.sample(u, v).r;
             col.g = g.sample(u, v).r;
             col.b = b.sample(u, v).r;
             col.a = a.sample(u, v).r;
-            
+
             img[x, y] = col;
         }
-        
+
         auto tex = New!Texture(img, mat);
         return tex;
     }
-    
+
+
+    final void setTransformation(Vector3f position, Quaternionf rotation, RenderingContext* rc){
+        import dlib.math.transformation;
+        auto modelMatrix=translationMatrix(position)*rotation.toMatrix4x4;
+        //auto invTransformation=rotation.inverse().toMatrix4x4*translationMatrix(-entity.position);
+        setModelViewMatrix(rc.viewMatrix*modelMatrix);
+    }
+    void setModelViewMatrix(Matrix4x4f modelViewMatrix);
+
+
     void bind(GenericMaterial mat, RenderingContext* rc);
     void unbind(GenericMaterial mat, RenderingContext* rc);
 }
@@ -221,7 +233,7 @@ class GenericMaterial: Material
     {
         _backend = b;
     }
-    
+
     bool isTransparent()
     {
         auto iblending = "blending" in inputs;
@@ -235,7 +247,7 @@ class GenericMaterial: Material
         auto iculling = "culling" in inputs;
         auto icolorWrite = "colorWrite" in inputs;
         auto idepthWrite = "depthWrite" in inputs;
-        
+
         if (iblending.asInteger == Transparent)
         {
             glEnablei(GL_BLEND, 0);
@@ -250,22 +262,22 @@ class GenericMaterial: Material
             glBlendFunci(0, GL_SRC_ALPHA, GL_ONE);
             glBlendFunci(1, GL_SRC_ALPHA, GL_ONE);
         }
-        
+
         if (iculling.asBool)
         {
             glEnable(GL_CULL_FACE);
         }
-        
+
         if (!icolorWrite.asBool)
         {
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         }
-        
+
         if (!idepthWrite.asBool && !rc.shadowMode)
         {
             glDepthMask(GL_FALSE);
         }
-    
+
         if (rc.overrideMaterialBackend)
             rc.overrideMaterialBackend.bind(this, rc);
         else if (_backend)
@@ -276,24 +288,24 @@ class GenericMaterial: Material
     {
         auto icolorWrite = "colorWrite" in inputs;
         auto idepthWrite = "depthWrite" in inputs;
-        
+
         if (rc.overrideMaterialBackend)
             rc.overrideMaterialBackend.unbind(this, rc);
         else if (_backend)
             _backend.unbind(this, rc);
-            
+
         if (!idepthWrite.asBool && rc.depthPass)
         {
             glDepthMask(GL_TRUE);
         }
-            
+
         if (!icolorWrite.asBool && rc.colorPass)
         {
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         }
-        
+
         glDisable(GL_CULL_FACE);
-        
+
         glDisablei(GL_BLEND, 0);
         glDisablei(GL_BLEND, 1);
     }
@@ -303,18 +315,18 @@ abstract class GLSLMaterialBackend: Owner, GenericMaterialBackend
 {
     string vertexShaderSrc();
     string fragmentShaderSrc();
-    
+
     GLuint shaderProgram;
     GLuint vertexShader;
     GLuint fragmentShader;
-    
+
     this(Owner o)
     {
         super(o);
-        
+
         const(char*)pvs = vertexShaderSrc().ptr;
         const(char*)pfs = fragmentShaderSrc().ptr;
-        
+
         char[1000] infobuffer = 0;
         int infobufferlen = 0;
 
@@ -351,12 +363,12 @@ abstract class GLSLMaterialBackend: Owner, GenericMaterialBackend
         glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
     }
-    
+
     void bind(GenericMaterial mat, RenderingContext* rc)
     {
         glUseProgram(shaderProgram);
     }
-    
+
     void unbind(GenericMaterial mat, RenderingContext* rc)
     {
         glUseProgram(0);

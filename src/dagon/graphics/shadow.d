@@ -166,6 +166,11 @@ class ShadowBackend: GLSLMaterialBackend
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
     }
 
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;
@@ -259,6 +264,10 @@ class BoneShadowBackend: GLSLMaterialBackend
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
+    }
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)

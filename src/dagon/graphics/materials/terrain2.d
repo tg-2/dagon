@@ -260,17 +260,39 @@ class TerrainBackend2: GLSLMaterialBackend
         blurMaskLoc = glGetUniformLocation(shaderProgram, "blurMask");
     }
 
+    final void bindColor(Texture color){
+        glActiveTexture(GL_TEXTURE5);
+        color.bind();
+        glUniform1i(colorTextureLoc, 5);
+    }
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
+        glUniform1i(diffuseTextureLoc, 0);
+    }
+    Texture defaultDetail=null;
+    final void bindDetail(Texture detail){
+        if(!detail){
+            if(!defaultDetail) defaultDetail=makeOnePixelTexture(null, Color4f(0,0,0)); // TODO: fix memory leak?
+            detail=defaultDetail;
+        }
+        glActiveTexture(GL_TEXTURE4);
+        detail.bind();
+        glUniform1i(detailTextureLoc, 4);
+    }
+    final void bindEmission(Texture emission){
+        glActiveTexture(GL_TEXTURE3);
+        emission.bind();
+        glUniform1i(emissionTextureLoc, 3);
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
-        auto idetail = "detail" in mat.inputs;
-        auto icolor = "color" in mat.inputs;
         //auto inormal = "normal" in mat.inputs;
         //auto iheight = "height" in mat.inputs;
         auto ipbr = "pbr" in mat.inputs;
         auto iroughness = "roughness" in mat.inputs;
         auto imetallic = "metallic" in mat.inputs;
-        auto iemission = "emission" in mat.inputs;
         auto iEnergy = "energy" in mat.inputs;
 
         int parallaxMethod = intProp(mat, "parallax");
@@ -291,36 +313,6 @@ class TerrainBackend2: GLSLMaterialBackend
 
         glUniformMatrix4fv(prevModelViewProjMatrixLoc, 1, GL_FALSE, rc.prevModelViewProjMatrix.arrayof.ptr);
         glUniformMatrix4fv(blurModelViewProjMatrixLoc, 1, GL_FALSE, rc.blurModelViewProjMatrix.arrayof.ptr);
-
-        // Texture 0 - diffuse texture
-        if (idiffuse.texture is null)
-        {
-            Color4f color = Color4f(idiffuse.asVector4f);
-            idiffuse.texture = makeOnePixelTexture(mat, color);
-        }
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.bind();
-        glUniform1i(diffuseTextureLoc, 0);
-
-        // Texture 4 - detail texture
-        if (idetail.texture is null)
-        {
-            Color4f color = Color4f(idetail.asVector4f);
-            idetail.texture = makeOnePixelTexture(mat, color);
-        }
-        glActiveTexture(GL_TEXTURE4);
-        idetail.texture.bind();
-        glUniform1i(detailTextureLoc, 4);
-
-        // Texture 5 - color texture
-        if (icolor.texture is null)
-        {
-            Color4f color = Color4f(icolor.asVector4f);
-            icolor.texture = makeOnePixelTexture(mat, color);
-        }
-        glActiveTexture(GL_TEXTURE5);
-        icolor.texture.bind();
-        glUniform1i(colorTextureLoc, 5);
 
 
         // Texture 1 - normal map + parallax map
@@ -366,15 +358,6 @@ class TerrainBackend2: GLSLMaterialBackend
         glUniform1i(rmsTextureLoc, 2);
         ipbr.texture.bind();
 
-        // Texture 3 - emission map
-        if (iemission.texture is null)
-        {
-            Color4f color = Color4f(iemission.asVector4f);
-            iemission.texture = makeOnePixelTexture(mat, color);
-        }
-        glActiveTexture(GL_TEXTURE3);
-        iemission.texture.bind();
-        glUniform1i(emissionTextureLoc, 3);
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
 
         glActiveTexture(GL_TEXTURE0);
@@ -382,22 +365,11 @@ class TerrainBackend2: GLSLMaterialBackend
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
-        auto inormal = "normal" in mat.inputs;
         auto ipbr = "pbr" in mat.inputs;
         auto iemission = "emission" in mat.inputs;
 
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.unbind();
-
-        /+glActiveTexture(GL_TEXTURE1);
-        inormal.texture.unbind();+/
-
         glActiveTexture(GL_TEXTURE2);
         ipbr.texture.unbind();
-
-        glActiveTexture(GL_TEXTURE3);
-        iemission.texture.unbind();
 
         glActiveTexture(GL_TEXTURE0);
 

@@ -419,9 +419,7 @@ class CascadedShadowMap: Owner
             glDisable(GL_CULL_FACE);
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-            foreach(e; scene.entities3D)
-                if (e.castShadow)
-                    e.render(&rcLocal);
+            scene.renderShadowCastingEntities3D(&rcLocal);
             scene.particleSystem.render(&rcLocal);
         }
 

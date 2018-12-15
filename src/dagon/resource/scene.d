@@ -1015,6 +1015,12 @@ class Scene: BaseScene
         shadowMap.render(rc);
     }
 
+    void renderShadowCastingEntities3D(RenderingContext* rc){
+        foreach(e; entities3D)
+            if (e.castShadow)
+                e.render(rc);
+    }
+
     void renderBackgroundEntities3D(RenderingContext* rc)
     {
         glEnable(GL_DEPTH_TEST);

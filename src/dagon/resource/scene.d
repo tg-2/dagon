@@ -899,9 +899,9 @@ class Scene: BaseScene
         hdrFilter.velocityTexture = gbuffer.velocityTexture; //sceneFramebuffer.velocityTexture;
         postFilters.append(hdrFilter);
 
-        /+fxaaFilter = New!PostFilterFXAA(null, null, assetManager);
+        fxaaFilter = New!PostFilterFXAA(null, null, assetManager);
         postFilters.append(fxaaFilter);
-        fxaaFilter.enabled = false;+/
+        fxaaFilter.enabled = false;
 
         /+lensFilter = New!PostFilterLensDistortion(null, null, assetManager);
         postFilters.append(lensFilter);

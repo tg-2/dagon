@@ -43,49 +43,49 @@ class PostFilter: Owner
     bool enabled = true;
     Framebuffer inputBuffer;
     Framebuffer outputBuffer;
-    
+
     GLenum shaderVert;
     GLenum shaderFrag;
     GLenum shaderProgram;
-    
+
     GLint modelViewMatrixLoc;
     GLint prevModelViewProjMatrixLoc;
     GLint projectionMatrixLoc;
     GLint fbColorLoc;
     GLint viewportSizeLoc;
     GLint enabledLoc;
-    
-    private string vsText = 
+
+    private string vsText =
     q{
         #version 330 core
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
         uniform vec2 viewSize;
-        
+
         layout (location = 0) in vec2 va_Vertex;
         layout (location = 1) in vec2 va_Texcoord;
 
         out vec2 texCoord;
-        
+
         void main()
         {
             texCoord = va_Texcoord;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex * viewSize, 0.0, 1.0);
         }
     };
-    
+
     private string fsText =
     q{
         #version 330 core
-        
+
         uniform sampler2D fbColor;
         uniform vec2 viewSize;
 
         in vec2 texCoord;
         out vec4 frag_color;
-        
+
         void main()
         {
             vec4 t = texture(fbColor, texCoord);
@@ -93,20 +93,20 @@ class PostFilter: Owner
             frag_color.a = 1.0;
         }
     };
-    
+
     string vertexShader() {return vsText;}
     string fragmentShader() {return fsText;}
 
     this(Framebuffer inputBuffer, Framebuffer outputBuffer, Owner o)
     {
         super(o);
-        
+
         this.inputBuffer = inputBuffer;
         this.outputBuffer = outputBuffer;
-        
+
         const(char*)pvs = vertexShader().ptr;
         const(char*)pfs = fragmentShader().ptr;
-        
+
         char[1000] infobuffer = 0;
         int infobufferlen = 0;
 
@@ -142,7 +142,7 @@ class PostFilter: Owner
         glAttachShader(shaderProgram, shaderVert);
         glAttachShader(shaderProgram, shaderFrag);
         glLinkProgram(shaderProgram);
-        
+
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         prevModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "prevModelViewProjMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
@@ -151,42 +151,42 @@ class PostFilter: Owner
         fbColorLoc = glGetUniformLocation(shaderProgram, "fbColor");
         enabledLoc = glGetUniformLocation(shaderProgram, "enabled");
     }
-    
+
     void bind(RenderingContext* rc)
     {
         glUseProgram(shaderProgram);
-        
+
         glUniformMatrix4fv(modelViewMatrixLoc, 1, 0, rc.viewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, 0, rc.projectionMatrix.arrayof.ptr);
-        
+
         glUniformMatrix4fv(prevModelViewProjMatrixLoc, 1, 0, rc.prevModelViewProjMatrix.arrayof.ptr);
-        
+
         Vector2f viewportSize;
-        
+
         if (outputBuffer)
             viewportSize = Vector2f(outputBuffer.width, outputBuffer.height);
         else
-            viewportSize = Vector2f(rc.eventManager.windowWidth, rc.eventManager.windowHeight);
+            viewportSize = Vector2f(rc.width, rc.height);
         glUniform2fv(viewportSizeLoc, 1, viewportSize.arrayof.ptr);
-        
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, inputBuffer.colorTexture);
 
         glUniform1i(fbColorLoc, 0);
-       
+
         glUniform1i(enabledLoc, enabled);
     }
-    
+
     void unbind(RenderingContext* rc)
     {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        
+
         glUseProgram(0);
     }
-    
+
     void render(RenderingContext* rc)
     {
         bind(rc);

@@ -610,7 +610,7 @@ class DeferredEnvironmentPass: Owner
 
         Vector2f viewportSize;
 
-        viewportSize = Vector2f(rc3d.eventManager.windowWidth, rc3d.eventManager.windowHeight);
+        viewportSize = Vector2f(rc3d.width, rc3d.height);
         glUniform2fv(viewportSizeLoc, 1, viewportSize.arrayof.ptr);
 
         Vector4f sunVector = Vector4f(0.0f, 1.0f, 0.0, 0.0f);
@@ -1073,7 +1073,7 @@ class DeferredLightPass: Owner
 
         Vector2f viewportSize;
 
-        viewportSize = Vector2f(rc3d.eventManager.windowWidth, rc3d.eventManager.windowHeight);
+        viewportSize = Vector2f(rc3d.width, rc3d.height);
         glUniform2fv(viewportSizeLoc, 1, viewportSize.arrayof.ptr);
 
         // Texture 0 - color buffer

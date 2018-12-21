@@ -56,17 +56,17 @@ class PostFilterHDR: PostFilter
 {
     private string vs = "
         #version 330 core
-        
+
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
         uniform vec2 viewSize;
-        
+
         layout (location = 0) in vec2 va_Vertex;
         layout (location = 1) in vec2 va_Texcoord;
 
         out vec2 texCoord;
-        
+
         void main()
         {
             texCoord = va_Texcoord;
@@ -76,7 +76,7 @@ class PostFilterHDR: PostFilter
 
     private string fs = "
         #version 330 core
-        
+
         uniform sampler2D fbColor;
         uniform sampler2D fbVelocity;
         uniform sampler2D colorTable;
@@ -87,17 +87,17 @@ class PostFilterHDR: PostFilter
         uniform bool useMotionBlur;
         uniform int motionBlurSamples;
         uniform float shutterFps;
-        
+
         uniform float exposure;
         uniform int tonemapFunction;
-        
+
         uniform bool useLUT;
         uniform bool useVignette;
-        
+
         in vec2 texCoord;
-        
+
         out vec4 frag_color;
-        
+
         vec3 hableFunc(vec3 x)
         {
             return ((x * (0.15 * x + 0.1 * 0.5) + 0.2 * 0.02) / (x * (0.15 * x + 0.5) + 0.2 * 0.3)) - 0.02 / 0.3;
@@ -110,14 +110,14 @@ class PostFilterHDR: PostFilter
             c = hableFunc(c * 2.0) * (1.0 / hableFunc(whitePoint));
             return pow(c, vec3(1.0 / 2.2));
         }
-        
+
         vec3 tonemapReinhard(vec3 x, float expo)
         {
             vec3 c = x * expo;
             c = c / (c + 1.0);
             return pow(c, vec3(1.0 / 2.2));
         }
-        
+
         vec3 tonemapACES(vec3 x, float expo)
         {
             float a = 2.51;
@@ -129,7 +129,7 @@ class PostFilterHDR: PostFilter
             res = clamp((res*(a*res+b))/(res*(c*res+d)+e), 0.0, 1.0);
             return pow(res, vec3(1.0 / 2.2));
         }
-        
+
         vec3 lookupColor(sampler2D lookupTable, vec3 textureColor)
         {
             textureColor = clamp(textureColor, 0.0, 1.0);
@@ -162,14 +162,14 @@ class PostFilterHDR: PostFilter
         void main()
         {
             vec3 res = texture(fbColor, texCoord).rgb;
-            
+
             if (useMotionBlur)
             {
                 vec2 blurVec = texture(fbVelocity, texCoord).xy;
                 blurVec = blurVec / (timeStep * shutterFps);
                 float invSamplesMinusOne = 1.0 / float(motionBlurSamples - 1);
                 float usedSamples = 1.0;
-                
+
                 for (float i = 1.0; i < motionBlurSamples; i++)
                 {
                     vec2 offset = blurVec * (i * invSamplesMinusOne - 0.5);
@@ -177,20 +177,20 @@ class PostFilterHDR: PostFilter
                     res += texture(fbColor, texCoord + offset).rgb * mask;
                     usedSamples += mask;
                 }
-                
+
                 res = res / usedSamples;
             }
-            
+
             if (tonemapFunction == 2)
                 res = tonemapACES(res, exposure);
             else if (tonemapFunction == 1)
                 res = tonemapHable(res, exposure);
             else
                 res = tonemapReinhard(res, exposure);
-                
+
             if (useVignette)
                 res = mix(res, res * texture(vignette, vec2(texCoord.x, 1.0 - texCoord.y)).rgb, 0.8);
-            
+
             if (useLUT)
                 res = lookupColor(colorTable, res);
 
@@ -207,7 +207,7 @@ class PostFilterHDR: PostFilter
     {
         return fs;
     }
-    
+
     GLint colorTableLoc;
     GLint exposureLoc;
     GLint tonemapFunctionLoc;
@@ -219,17 +219,17 @@ class PostFilterHDR: PostFilter
     GLint motionBlurSamplesLoc;
     GLint shutterFpsLoc;
     GLint timeStepLoc;
-    
+
     bool autoExposure = false;
-    
+
     float minLuminance = 0.001f;
     float maxLuminance = 100000.0f;
     float keyValue = 0.5f;
     float adaptationSpeed = 4.0f;
-    
+
     float exposure = 0.5f;
     Tonemapper tonemapFunction = Tonemapper.ACES;
-    
+
     GLuint velocityTexture;
     bool mblurEnabled = false;
     int motionBlurSamples = 20;
@@ -242,7 +242,7 @@ class PostFilterHDR: PostFilter
     this(Framebuffer inputBuffer, Framebuffer outputBuffer, Owner o)
     {
         super(inputBuffer, outputBuffer, o);
-        
+
         colorTableLoc = glGetUniformLocation(shaderProgram, "colorTable");
         exposureLoc = glGetUniformLocation(shaderProgram, "exposure");
         tonemapFunctionLoc = glGetUniformLocation(shaderProgram, "tonemapFunction");
@@ -255,27 +255,27 @@ class PostFilterHDR: PostFilter
         shutterFpsLoc = glGetUniformLocation(shaderProgram, "shutterFps");
         timeStepLoc = glGetUniformLocation(shaderProgram, "timeStep");
     }
-    
+
     override void bind(RenderingContext* rc)
     {
         super.bind(rc);
-        
+
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, velocityTexture);
-        
+
         glActiveTexture(GL_TEXTURE3);
         if (colorTable)
             colorTable.bind();
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glActiveTexture(GL_TEXTURE0);
-        
+
         glActiveTexture(GL_TEXTURE4);
         if (vignette)
             vignette.bind();
 
         glActiveTexture(GL_TEXTURE0);
-        
+
         glUniform1i(fbVelocityLoc, 2);
         glUniform1i(colorTableLoc, 3);
         glUniform1f(exposureLoc, exposure);
@@ -286,18 +286,18 @@ class PostFilterHDR: PostFilter
         glUniform1i(useMotionBlurLoc, mblurEnabled);
         glUniform1i(motionBlurSamplesLoc, motionBlurSamples);
         glUniform1f(shutterFpsLoc, shutterFps);
-        glUniform1f(timeStepLoc, rc.eventManager.deltaTime);
+        glUniform1f(timeStepLoc, /+rc.eventManager.deltaTime+/ 1.0f/60.0f);
     }
-    
+
     override void unbind(RenderingContext* rc)
     {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, 0);
-    
+
         glActiveTexture(GL_TEXTURE3);
         if (colorTable)
             colorTable.unbind();
-        
+
         glActiveTexture(GL_TEXTURE4);
         if (vignette)
             vignette.unbind();

@@ -652,15 +652,21 @@ class Scene: BaseScene
     double timer = 0.0;
     double fixedTimeStep = 1.0 / 60.0;
 
-    this(SceneManager smngr)
+    int width, height;
+
+    this(int width, int height, SceneManager smngr)
     {
         super(smngr);
 
-        rc3d.init(eventManager, environment);
-        rc3d.projectionMatrix = perspectiveMatrix(60.0f, eventManager.aspectRatio, 0.1f, 10000.0f);
+        this.width=width;
+        this.height=height;
 
-        rc2d.init(eventManager, environment);
-        rc2d.projectionMatrix = orthoMatrix(0.0f, eventManager.windowWidth, 0.0f, eventManager.windowHeight, 0.0f, 100.0f);
+        rc3d.init(width, height, environment);
+        auto aspectRatio=cast(float)width/cast(float)height;
+        rc3d.projectionMatrix = perspectiveMatrix(60.0f, aspectRatio, 0.1f, 10000.0f);
+
+        rc2d.init(width, height, environment);
+        rc2d.projectionMatrix = orthoMatrix(0.0f, width, 0.0f, height, 0.0f, 100.0f);
 
         loadingProgressBar = New!ShapeQuad(assetManager);
         eLoadingProgressBar = New!Entity(eventManager, assetManager);
@@ -839,6 +845,10 @@ class Scene: BaseScene
     int shadowMapResolution=8192;
     override void onAllocate()
     {
+        if(width==0||height==0){
+            width=eventManager.windowWidth;
+            height=eventManager.windowHeight;
+        }
         environment = New!Environment(assetManager);
 
         lightManager = New!LightManager(200.0f, 100, assetManager);
@@ -858,11 +868,11 @@ class Scene: BaseScene
 
         defaultMaterial3D = createMaterial();
 
-        gbuffer = New!GBuffer(eventManager.windowWidth, eventManager.windowHeight, this, assetManager);
+        gbuffer = New!GBuffer(width, height, this, assetManager);
         deferredEnvPass = New!DeferredEnvironmentPass(gbuffer, shadowMap, assetManager);
         deferredLightPass = New!DeferredLightPass(gbuffer, lightManager, assetManager);
 
-        sceneFramebuffer = New!Framebuffer(eventManager.windowWidth, eventManager.windowHeight, true, true, assetManager);
+        sceneFramebuffer = New!Framebuffer(width, height, true, true, assetManager);
 
         ssao.scene = this;
         hdr.scene = this;
@@ -874,13 +884,13 @@ class Scene: BaseScene
         antiAliasing.scene = this;
         lensDistortion.scene = this;
 
-        hblurredFramebuffer = New!Framebuffer(eventManager.windowWidth / 2, eventManager.windowHeight / 2, true, false, assetManager);
+        hblurredFramebuffer = New!Framebuffer(width / 2, height / 2, true, false, assetManager);
         hblur = New!PostFilterBlur(true, sceneFramebuffer, hblurredFramebuffer, assetManager);
 
-        vblurredFramebuffer = New!Framebuffer(eventManager.windowWidth / 2, eventManager.windowHeight / 2, true, false, assetManager);
+        vblurredFramebuffer = New!Framebuffer(width / 2, height / 2, true, false, assetManager);
         vblur = New!PostFilterBlur(false, hblurredFramebuffer, vblurredFramebuffer, assetManager);
 
-        hdrPrepassFramebuffer = New!Framebuffer(eventManager.windowWidth, eventManager.windowHeight, true, false, assetManager);
+        hdrPrepassFramebuffer = New!Framebuffer(width, height, true, false, assetManager);
         hdrPrepassFilter = New!PostFilterHDRPrepass(sceneFramebuffer, hdrPrepassFramebuffer, assetManager);
         hdrPrepassFilter.blurredTexture = vblurredFramebuffer.colorTexture;
         postFilters.append(hdrPrepassFilter);
@@ -919,14 +929,14 @@ class Scene: BaseScene
     override void onLoading(float percentage)
     {
         glEnable(GL_SCISSOR_TEST);
-        glScissor(0, 0, eventManager.windowWidth, eventManager.windowHeight);
-        glViewport(0, 0, eventManager.windowWidth, eventManager.windowHeight);
+        glScissor(0, 0, width, height);
+        glViewport(0, 0, width, height);
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float maxWidth = eventManager.windowWidth * 0.33f;
-        float x = (eventManager.windowWidth - maxWidth) * 0.5f;
-        float y = eventManager.windowHeight * 0.5f - 10;
+        float maxWidth = width * 0.33f;
+        float x = (width - maxWidth) * 0.5f;
+        float y = height * 0.5f - 10;
         float w = percentage * maxWidth;
 
         glDisable(GL_DEPTH_TEST);
@@ -944,8 +954,8 @@ class Scene: BaseScene
 
     override void onStart()
     {
-        rc3d.initPerspective(eventManager, environment, 60.0f, 0.1f, 10000.0f);
-        rc2d.initOrtho(eventManager, environment, 0.0f, 100.0f);
+        rc3d.initPerspective(width, height, environment, 60.0f, 0.1f, 10000.0f);
+        rc2d.initOrtho(width, height, environment, 0.0f, 100.0f);
 
         timer = 0.0;
     }
@@ -1069,18 +1079,19 @@ class Scene: BaseScene
             e.render(rc);
     }
 
-    void prepareViewport(Framebuffer b = null)
+    void prepareViewport(Framebuffer b = null, bool move=false)
     {
         glEnable(GL_SCISSOR_TEST);
+        auto yOffset=move?eventManager.windowHeight-height:0;
         if (b)
         {
-            glScissor(0, 0, b.width, b.height);
-            glViewport(0, 0, b.width, b.height);
+            glScissor(0, 0+yOffset, b.width, b.height);
+            glViewport(0, 0+yOffset, b.width, b.height);
         }
         else
         {
-            glScissor(0, 0, eventManager.windowWidth, eventManager.windowHeight);
-            glViewport(0, 0, eventManager.windowWidth, eventManager.windowHeight);
+            glScissor(0, 0+yOffset, width, height);
+            glViewport(0, 0+yOffset, width, height);
         }
         if (environment)
             glClearColor(environment.backgroundColor.r, environment.backgroundColor.g, environment.backgroundColor.b, 0.0f);
@@ -1093,14 +1104,14 @@ class Scene: BaseScene
         foreach(i; 1..iterations+1)
         {
             hblur.outputBuffer.bind();
-            rcTmp.initOrtho(eventManager, environment, hblur.outputBuffer.width, hblur.outputBuffer.height, 0.0f, 100.0f);
+            rcTmp.initOrtho(width, height, environment, hblur.outputBuffer.width, hblur.outputBuffer.height, 0.0f, 100.0f);
             prepareViewport(hblur.outputBuffer);
             hblur.radius = i;
             hblur.render(&rcTmp);
             hblur.outputBuffer.unbind();
 
             vblur.outputBuffer.bind();
-            rcTmp.initOrtho(eventManager, environment, vblur.outputBuffer.width, vblur.outputBuffer.height, 0.0f, 100.0f);
+            rcTmp.initOrtho(width, height, environment, vblur.outputBuffer.width, vblur.outputBuffer.height, 0.0f, 100.0f);
             prepareViewport(vblur.outputBuffer);
             vblur.radius = i;
             vblur.render(&rcTmp);
@@ -1120,7 +1131,7 @@ class Scene: BaseScene
         sceneFramebuffer.bind();
 
         RenderingContext rcDeferred;
-        rcDeferred.initOrtho(eventManager, environment, eventManager.windowWidth, eventManager.windowHeight, 0.0f, 100.0f);
+        rcDeferred.initOrtho(width, height, environment, width, height, 0.0f, 100.0f);
         prepareViewport();
         sceneFramebuffer.clearBuffers();
 
@@ -1145,7 +1156,7 @@ class Scene: BaseScene
                 float newExposure = hdrFilter.keyValue * (1.0f / clamp(lum, hdrFilter.minLuminance, hdrFilter.maxLuminance));
 
                 float exposureDelta = newExposure - hdrFilter.exposure;
-                hdrFilter.exposure += exposureDelta * hdrFilter.adaptationSpeed * eventManager.deltaTime;
+                hdrFilter.exposure += exposureDelta * hdrFilter.adaptationSpeed * /+eventManager.deltaTime+/1.0f/60.0f;
             }
         }
 
@@ -1161,7 +1172,7 @@ class Scene: BaseScene
         if (f.enabled)
         {
             if (f.outputBuffer is null)
-                f.outputBuffer = New!Framebuffer(eventManager.windowWidth, eventManager.windowHeight, false, false, assetManager);
+                f.outputBuffer = New!Framebuffer(width, height, false, false, assetManager);
 
             if (f.inputBuffer is null)
                 f.inputBuffer = nextInput;
@@ -1169,13 +1180,13 @@ class Scene: BaseScene
             nextInput = f.outputBuffer;
 
             f.outputBuffer.bind();
-            rcTmp.initOrtho(eventManager, environment, f.outputBuffer.width, f.outputBuffer.height, 0.0f, 100.0f);
+            rcTmp.initOrtho(width, height, environment, f.outputBuffer.width, f.outputBuffer.height, 0.0f, 100.0f);
             prepareViewport(f.outputBuffer);
             f.render(&rcTmp);
             f.outputBuffer.unbind();
         }
 
-        prepareViewport();
+        prepareViewport(null, true);
         finalizerFilter.inputBuffer = nextInput;
         finalizerFilter.render(&rc2d);
 

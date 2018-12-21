@@ -38,7 +38,7 @@ import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
 struct RenderingContext
-{    
+{
     Matrix4x4f modelViewMatrix;
 
     Matrix4x4f modelMatrix;
@@ -49,39 +49,42 @@ struct RenderingContext
 
     Matrix4x4f viewMatrix;
     Matrix4x4f invViewMatrix;
-    
+
     Matrix4x4f viewRotationMatrix;
     Matrix4x4f invViewRotationMatrix;
 
     Matrix4x4f projectionMatrix;
     Matrix4x4f normalMatrix;
-    
+
     Matrix4x4f prevViewMatrix;
     Matrix4x4f prevModelViewProjMatrix;
     Matrix4x4f blurModelViewProjMatrix;
-    
+
     Frustum frustum;
 
-    EventManager eventManager;
+    //EventManager eventManager;
+    int width, height;
     Environment environment;
     Material overrideMaterial;
     GenericMaterialBackend overrideMaterialBackend;
-    
+
     float time;
     float blurMask;
-    
+
     bool depthPass;
     bool colorPass;
-    
+
     int layer;
-    
+
     bool ignoreTransparentEntities;
     bool ignoreOpaqueEntities;
-    
+
     bool shadowMode;
-    
-    void init(EventManager emngr, Environment env)
+
+    void init(int width, int height, Environment env)
     {
+        this.width=width;
+        this.height=height;
         modelViewMatrix = Matrix4x4f.identity;
         modelMatrix = Matrix4x4f.identity;
         invModelMatrix = Matrix4x4f.identity;
@@ -96,7 +99,6 @@ struct RenderingContext
         prevViewMatrix = Matrix4x4f.identity;
         prevModelViewProjMatrix = Matrix4x4f.identity;
         blurModelViewProjMatrix = Matrix4x4f.identity;
-        eventManager = emngr;
         environment = env;
         overrideMaterial = null;
         overrideMaterialBackend = null;
@@ -109,22 +111,22 @@ struct RenderingContext
         ignoreOpaqueEntities = false;
         shadowMode = false;
     }
-    
-    void initPerspective(EventManager emngr, Environment env, float fov, float znear, float zfar)
+
+    void initPerspective(int width, int height, Environment env, float fov, float znear, float zfar)
     {
-        init(emngr, env);
-        projectionMatrix = perspectiveMatrix(fov, emngr.aspectRatio, znear, zfar);
+        init(width, height, env);
+        projectionMatrix = perspectiveMatrix(fov, cast(float)width/cast(float)height, znear, zfar);
     }
-    
-    void initOrtho(EventManager emngr, Environment env, float znear, float zfar)
+
+    void initOrtho(int width, int height, Environment env, float znear, float zfar)
     {
-        init(emngr, env);
-        projectionMatrix = orthoMatrix(0.0f, emngr.windowWidth, emngr.windowHeight, 0.0f, znear, zfar);
+        init(width, height, env);
+        projectionMatrix = orthoMatrix(0.0f, width, height, 0.0f, znear, zfar);
     }
-    
-    void initOrtho(EventManager emngr, Environment env, float w, float h, float znear, float zfar)
+
+    void initOrtho(int width, int height, Environment env, float w, float h, float znear, float zfar)
     {
-        init(emngr, env);
+        init(width, height, env);
         projectionMatrix = orthoMatrix(0.0f, w, h, 0.0f, znear, zfar);
     }
 }

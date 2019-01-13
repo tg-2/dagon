@@ -170,6 +170,11 @@ interface GenericMaterialBackend
         //auto invTransformation=rotation.inverse().toMatrix4x4*translationMatrix(-entity.position);
         setModelViewMatrix(rc.viewMatrix*modelMatrix);
     }
+    final void setSpriteTransformation(Vector3f position, RenderingContext* rc){
+        import dlib.math.transformation;
+        import dlib.math.utils;
+        setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*rotationMatrix(Axis.x,degtorad(90.0f)));
+    }
     void setModelViewMatrix(Matrix4x4f modelViewMatrix);
 
 
@@ -356,7 +361,7 @@ abstract class GLSLMaterialBackend: Owner, GenericMaterialBackend
             glGetShaderInfoLog(fragmentShader, 999, &logSize, infobuffer.ptr);
             writeln("Error in fragment shader:");
             writeln(infobuffer[0..logSize]);
-        }
+         }
 
         shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);

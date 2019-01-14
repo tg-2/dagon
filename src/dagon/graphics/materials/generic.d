@@ -175,6 +175,11 @@ interface GenericMaterialBackend
         import dlib.math.utils;
         setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*rotationMatrix(Axis.x,degtorad(90.0f)));
     }
+    final void setSpriteTransformationScaled(Vector3f position, float scaling, RenderingContext* rc){
+        import dlib.math.transformation;
+        import dlib.math.utils;
+        setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*rotationMatrix(Axis.x,degtorad(90.0f))*scaleMatrix(Vector3f(scaling,scaling,scaling)));
+    }
     void setModelViewMatrix(Matrix4x4f modelViewMatrix);
 
 

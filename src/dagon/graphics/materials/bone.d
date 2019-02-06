@@ -240,6 +240,7 @@ class BoneBackend: GLSLMaterialBackend
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
     }
+    final void setAlpha(float alpha){ }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

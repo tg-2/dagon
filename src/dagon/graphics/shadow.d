@@ -170,6 +170,7 @@ class ShadowBackend: GLSLMaterialBackend
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
+    final void setAlpha(float alpha){ }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
@@ -269,6 +270,7 @@ class BoneShadowBackend: GLSLMaterialBackend
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
+    final void setAlpha(float alpha){ }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

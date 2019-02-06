@@ -138,6 +138,9 @@ class SacSunBackend: GLSLMaterialBackend
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
+    final void setAlpha(float alpha){
+        glUniform1f(alphaLoc, alpha);
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

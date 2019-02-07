@@ -78,6 +78,7 @@ class ShadelessBackend: GLSLMaterialBackend
         #version 330 core
 
         uniform sampler2D diffuseTexture;
+        uniform vec3 color;
         uniform float alpha;
         uniform float energy;
 
@@ -106,7 +107,7 @@ class ShadelessBackend: GLSLMaterialBackend
         void main()
         {
             vec4 col = texture(diffuseTexture, texCoord);
-            frag_color = vec4(toLinear(col.rgb) * energy, col.a * alpha);
+            frag_color = vec4(toLinear(col.rgb*color) * energy, col.a * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
@@ -120,6 +121,7 @@ class ShadelessBackend: GLSLMaterialBackend
     GLint projectionMatrixLoc;
 
     GLint diffuseTextureLoc;
+    GLint colorLoc;
     GLint alphaLoc;
     GLint energyLoc;
 
@@ -131,12 +133,16 @@ class ShadelessBackend: GLSLMaterialBackend
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
 
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
+        colorLoc = glGetUniformLocation(shaderProgram, "color");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+    }
+    final void setColor(Color4f color){
+        glUniform3fv(colorLoc,1,color.arrayof.ptr);
     }
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
@@ -146,6 +152,7 @@ class ShadelessBackend: GLSLMaterialBackend
     {
         auto idiffuse = "diffuse" in mat.inputs;
         auto ienergy = "energy" in mat.inputs;
+        auto icolor = "color" in mat.inputs;
         auto itransparency = "transparency" in mat.inputs;
 
         float energy = ienergy.asFloat;
@@ -157,7 +164,12 @@ class ShadelessBackend: GLSLMaterialBackend
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
         // Texture 0 - diffuse texture
-        Color4f color = Color4f(idiffuse.asVector4f);
+        Color4f diffuseColor = Color4f(idiffuse.asVector4f);
+        Color4f color = Color4f(1.0f,1.0f,1.0f,1.0f);
+        if (icolor)
+        {
+            color = Color4f(icolor.asVector4f);
+        }
         float alpha = 1.0f;
         if (idiffuse.texture is null)
         {
@@ -170,6 +182,7 @@ class ShadelessBackend: GLSLMaterialBackend
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.bind();
         glUniform1i(diffuseTextureLoc, 0);
+        glUniform3fv(colorLoc,1,color.arrayof.ptr);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
     }

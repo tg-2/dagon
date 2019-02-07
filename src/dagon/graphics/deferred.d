@@ -111,6 +111,7 @@ class DeferredEnvironmentPass: Owner
         uniform vec3 sunDirection;
         uniform vec3 sunColor;
         uniform float sunEnergy;
+        uniform vec3 ambientConstant;
         uniform vec3 skyZenithColor;
         uniform vec3 skyHorizonColor;
         uniform vec3 groundColor;
@@ -394,8 +395,10 @@ class DeferredEnvironmentPass: Owner
             }
             else
             {
-                ambientDiffuse = sky(worldN, worldSun, 1.0);
-                ambientSpecular = sky(worldR, worldSun, roughness);
+                //ambientDiffuse = sky(worldN, worldSun, 1.0);
+                //ambientSpecular = sky(worldR, worldSun, roughness);
+                ambientDiffuse = ambientConstant;
+                ambientSpecular = ambientConstant;
             }
 
             vec3 F = fresnelRoughness(max(dot(N, E), 0.0), f0, roughness);
@@ -436,6 +439,8 @@ class DeferredEnvironmentPass: Owner
     GLint sunDirectionLoc;
     GLint sunColorLoc;
     GLint sunEnergyLoc;
+
+    GLint ambientConstantLoc;
 
     GLint skyZenithColorLoc;
     GLint skyHorizonColorLoc;
@@ -570,6 +575,8 @@ class DeferredEnvironmentPass: Owner
         sunColorLoc = glGetUniformLocation(envPassShaderProgram, "sunColor");
         sunEnergyLoc = glGetUniformLocation(envPassShaderProgram, "sunEnergy");
 
+        ambientConstantLoc = glGetUniformLocation(envPassShaderProgram, "ambientConstant");
+
         skyZenithColorLoc = glGetUniformLocation(envPassShaderProgram, "skyZenithColor");
         skyHorizonColorLoc = glGetUniformLocation(envPassShaderProgram, "skyHorizonColor");
         skyEnergyLoc = glGetUniformLocation(envPassShaderProgram, "skyEnergy");
@@ -618,6 +625,7 @@ class DeferredEnvironmentPass: Owner
         float sunEnergy = 100.0f;
         Color4f skyZenithColor = Color4f(0, 0, 0, 0);
         Color4f skyHorizonColor = Color4f(0, 0, 0, 0);
+        Color4f ambientConstant = Color4f(0.1f,0.1f,0.1f,1.0f);
         float skyEnergy = 1.0f;
         Color4f groundColor = Color4f(0, 0, 0, 0);
         float groundEnergy = 1.0f;
@@ -628,6 +636,8 @@ class DeferredEnvironmentPass: Owner
 
             sunColor = rc3d.environment.sunColor;
             sunEnergy = rc3d.environment.sunEnergy;
+
+            ambientConstant = rc2d.environment.ambientConstant;
 
             skyZenithColor = rc3d.environment.skyZenithColor;
             skyHorizonColor = rc3d.environment.skyHorizonColor;
@@ -640,6 +650,8 @@ class DeferredEnvironmentPass: Owner
         glUniform3fv(sunDirectionLoc, 1, sunDirectionEye.arrayof.ptr);
         glUniform3fv(sunColorLoc, 1, sunColor.arrayof.ptr);
         glUniform1f(sunEnergyLoc, sunEnergy);
+
+        glUniform3fv(ambientConstantLoc, 1, ambientConstant.arrayof.ptr);
 
         glUniform3fv(skyZenithColorLoc, 1, skyZenithColor.arrayof.ptr);
         glUniform3fv(skyHorizonColorLoc, 1, skyHorizonColor.arrayof.ptr);

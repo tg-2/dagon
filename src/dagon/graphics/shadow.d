@@ -171,6 +171,7 @@ class ShadowBackend: GLSLMaterialBackend
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){ }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
@@ -271,6 +272,7 @@ class BoneShadowBackend: GLSLMaterialBackend
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){ }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

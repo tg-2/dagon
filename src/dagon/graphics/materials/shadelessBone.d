@@ -131,6 +131,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     GLint alphaLoc;
     GLint energyLoc;
 
+    GLint informationLoc;
+
     this(Owner o)
     {
         super(o);
@@ -141,6 +143,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
+
+        informationLoc = glGetUniformLocation(shaderProgram, "information");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
@@ -148,6 +152,9 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     }
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
+    }
+    final void setInformation(Vector4f information){
+        glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
@@ -180,6 +187,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         glUniform1i(diffuseTextureLoc, 0);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
+
+        glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

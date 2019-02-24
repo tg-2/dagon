@@ -83,6 +83,8 @@ class SacSkyBackend: GLSLMaterialBackend
         uniform vec2 sunLoc;
         uniform vec2 cloudOffset;
 
+        uniform vec4 information;
+
         in vec3 eyePosition;
         in vec2 texCoord;
 
@@ -90,6 +92,7 @@ class SacSkyBackend: GLSLMaterialBackend
         layout(location = 2) out vec4 frag_position;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_luma;
+        layout(location = 6) out vec4 frag_information;
 
         float luminance(vec3 color)
         {
@@ -119,6 +122,7 @@ class SacSkyBackend: GLSLMaterialBackend
             frag_luma = vec4(energy, 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
+            frag_information = information;
         }
     ";
 
@@ -133,6 +137,8 @@ class SacSkyBackend: GLSLMaterialBackend
     GLint energyLoc;
     GLint sunLocLoc;
     GLint cloudOffsetLoc;
+
+    GLint informationLoc;
 
     Vector2f sunLoc = Vector2f(0,0);
     Vector2f cloudOffset = Vector2f(0,0);
@@ -149,6 +155,8 @@ class SacSkyBackend: GLSLMaterialBackend
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
         sunLocLoc = glGetUniformLocation(shaderProgram, "sunLoc");
         cloudOffsetLoc = glGetUniformLocation(shaderProgram, "cloudOffset");
+
+        informationLoc = glGetUniformLocation(shaderProgram, "information");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
@@ -156,6 +164,9 @@ class SacSkyBackend: GLSLMaterialBackend
     }
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
+    }
+    final void setInformation(Vector4f information){
+        glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
@@ -190,6 +201,7 @@ class SacSkyBackend: GLSLMaterialBackend
         glUniform1f(energyLoc, energy);
         glUniform2f(sunLocLoc, sunLoc.x, sunLoc.y);
         glUniform2f(cloudOffsetLoc, cloudOffset.x, cloudOffset.y);
+        glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

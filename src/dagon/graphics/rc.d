@@ -71,6 +71,8 @@ struct RenderingContext
     float time;
     float blurMask;
 
+    Vector4f information=Vector4f(0.0f,0.0f,0.0f,1.0f);
+
     bool depthPass;
     bool colorPass;
 

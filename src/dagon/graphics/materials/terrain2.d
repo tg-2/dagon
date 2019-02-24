@@ -124,6 +124,7 @@ class TerrainBackend2: GLSLMaterialBackend
         layout(location = 3) out vec4 frag_normal;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_emission;
+        layout(location = 6) out vec4 frag_information;
 
         mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
         {
@@ -203,6 +204,7 @@ class TerrainBackend2: GLSLMaterialBackend
             frag_normal = vec4(N, 1.0);
             frag_velocity = vec4(screenVelocity, 0.0, blurMask);
             frag_emission = vec4(emission, 1.0);
+            frag_information = vec4(1,coord,1); // 1: landscape
         }
     ";
 
@@ -291,6 +293,9 @@ class TerrainBackend2: GLSLMaterialBackend
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        assert(0, "can't set custom information for terrain.");
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

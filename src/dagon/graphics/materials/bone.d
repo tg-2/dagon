@@ -110,6 +110,8 @@ class BoneBackend: GLSLMaterialBackend
 
         uniform float blurMask;
 
+        uniform vec4 information;
+
         in vec2 texCoord;
         in vec3 eyePosition;
         in vec3 eyeNormal;
@@ -123,6 +125,7 @@ class BoneBackend: GLSLMaterialBackend
         layout(location = 3) out vec4 frag_normal;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_emission;
+        layout(location = 6) out vec4 frag_information;
 
         mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
         {
@@ -183,6 +186,7 @@ class BoneBackend: GLSLMaterialBackend
             frag_normal = vec4(N, 1.0);
             frag_velocity = vec4(screenVelocity, 0.0, blurMask);
             frag_emission = vec4(emission, 1.0);
+            frag_information = information;
         }
     ";
 
@@ -210,6 +214,8 @@ class BoneBackend: GLSLMaterialBackend
 
     GLint blurMaskLoc;
 
+    GLint informationLoc;
+
     this(Owner o)
     {
         super(o);
@@ -234,6 +240,8 @@ class BoneBackend: GLSLMaterialBackend
         parallaxBiasLoc = glGetUniformLocation(shaderProgram, "parallaxBias");
 
         blurMaskLoc = glGetUniformLocation(shaderProgram, "blurMask");
+
+        informationLoc = glGetUniformLocation(shaderProgram, "information");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
@@ -241,6 +249,9 @@ class BoneBackend: GLSLMaterialBackend
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
@@ -264,6 +275,8 @@ class BoneBackend: GLSLMaterialBackend
         glUniform1i(layerLoc, rc.layer);
 
         glUniform1f(blurMaskLoc, rc.blurMask);
+
+        glUniform4fv(informationLoc,1, rc.information.arrayof.ptr);
 
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);

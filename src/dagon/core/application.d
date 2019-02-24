@@ -69,7 +69,7 @@ ShouldThrow sdlOnMissingSymbol(string symbolName)
 
 /++
     Base class to inherit Dagon applications from.
-    `Application` wraps SDL2 window, loads dynamic link libraries using Derelict, 
+    `Application` wraps SDL2 window, loads dynamic link libraries using Derelict,
     is responsible for initializing OpenGL context and doing main game loop.
 +/
 class Application: EventListener
@@ -79,9 +79,9 @@ class Application: EventListener
     SDL_Window* window = null;
     SDL_GLContext glcontext;
     string libdir;
-    
+
     /++
-        Constructor. 
+        Constructor.
         * `winWidth` - window width
         * `winHeight` - window height
         * `fullscreen` - if true, the application will run in fullscreen mode
@@ -91,7 +91,7 @@ class Application: EventListener
     this(uint winWidth, uint winHeight, bool fullscreen, string windowTitle, string[] args)
     {
         try
-        { 
+        {
             getopt(
                 args,
                 "libdir", &libdir,
@@ -100,7 +100,7 @@ class Application: EventListener
         catch(Exception)
         {
         }
-        
+
         DerelictSDL2.missingSymbolCallback = &sdlOnMissingSymbol;
         DerelictFT.missingSymbolCallback = &ftOnMissingSymbol;
 
@@ -127,7 +127,7 @@ class Application: EventListener
             }
         }
         else
-        {  
+        {
             version(linux)
             {
                 version(X86)
@@ -183,7 +183,7 @@ class Application: EventListener
                 }
             }
         }
-        
+
         version(FreeBSD)
         {
             DerelictSDL2.load();
@@ -192,12 +192,12 @@ class Application: EventListener
 
         if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
             exitWithError("Failed to init SDL: " ~ to!string(SDL_GetError()));
-            
+
         width = winWidth;
         height = winHeight;
 
-        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);        
-       
+        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -206,17 +206,17 @@ class Application: EventListener
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-        window = SDL_CreateWindow(toStringz(windowTitle), 
+        window = SDL_CreateWindow(toStringz(windowTitle),
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (window is null)
             exitWithError("Failed to create window: " ~ to!string(SDL_GetError()));
-            
+
         SDL_GL_SetSwapInterval(1);
-            
+
         glcontext = SDL_GL_CreateContext(window);
         if (glcontext is null)
             exitWithError("Failed to create GL context: " ~ to!string(SDL_GetError()));
-            
+
         SDL_GL_MakeCurrent(window, glcontext);
 
         GLVersion loadedVersion = DerelictGL3.reload();
@@ -225,13 +225,13 @@ class Application: EventListener
         {
             exitWithError("Sorry, Dagon requires OpenGL 4.0!");
         }
-        
+
         if (fullscreen)
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-            
+
         EventManager eventManager = new EventManager(window, width, height);
         super(eventManager, null);
-            
+
         // Initialize OpenGL
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0);
@@ -239,7 +239,7 @@ class Application: EventListener
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glCullFace(GL_BACK);
-        
+
         //checkGLError();
     }
 
@@ -250,17 +250,17 @@ class Application: EventListener
             exit();
         }
     }
-    
+
     void onUpdate(double dt)
     {
         // Override me
     }
-    
+
     void onRender()
     {
         // Override me
     }
-    
+
     void checkGLError()
     {
         GLenum error = GL_NO_ERROR;
@@ -271,14 +271,14 @@ class Application: EventListener
             eventManager.running = false;
         }
     }
-    
+
     void run()
     {
         while(eventManager.running)
         {
             beginRender();
-            onUpdate(eventManager.deltaTime);
             onRender();
+            onUpdate(eventManager.deltaTime);
             endRender();
         }
     }
@@ -294,12 +294,12 @@ class Application: EventListener
         debug checkGLError();
         SDL_GL_SwapWindow(window);
     }
-    
+
     void exit()
     {
         eventManager.running = false;
     }
-    
+
     ~this()
     {
         SDL_GL_DeleteContext(glcontext);

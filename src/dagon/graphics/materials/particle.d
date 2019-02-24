@@ -334,6 +334,10 @@ class ParticleBackend: GLSLMaterialBackend
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+        assert(0,"TODO?");
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

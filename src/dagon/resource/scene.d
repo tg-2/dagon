@@ -349,7 +349,7 @@ class Scene: BaseScene
     GeometryPassBackend defaultMaterialBackend;
     GenericMaterial defaultMaterial3D;
 
-    ParticleBackend particleMaterialBackend;
+    //ParticleBackend particleMaterialBackend;
 
     BoneBackend boneMaterialBackend;
     TerrainBackend2 terrainMaterialBackend;
@@ -364,7 +364,13 @@ class Scene: BaseScene
     RenderingContext rc2d;
     View view;
 
-    GBuffer gbuffer;
+    GBuffer[2] gbuffers;
+    static if(gbuffers.length!=1) int curGBuffer=0;
+    else enum curGBuffer=0;
+
+    @property final GBuffer gbuffer(){
+        return gbuffers[curGBuffer];
+    }
     DeferredEnvironmentPass deferredEnvPass;
     DeferredLightPass deferredLightPass;
 
@@ -830,12 +836,12 @@ class Scene: BaseScene
         return New!GenericMaterial(backend, assetManager);
     }
 
-    GenericMaterial createParticleMaterial(GenericMaterialBackend backend = null)
+    /+GenericMaterial createParticleMaterial(GenericMaterialBackend backend = null)
     {
         if (backend is null)
             backend = particleMaterialBackend;
         return New!GenericMaterial(backend, assetManager);
-    }
+    }+/
 
     LightSource createLight(Vector3f position, Color4f color, float energy, float volumeRadius, float areaRadius = 0.0f)
     {
@@ -868,7 +874,8 @@ class Scene: BaseScene
 
         defaultMaterial3D = createMaterial();
 
-        gbuffer = New!GBuffer(width, height, this, assetManager);
+        foreach(i;0..gbuffers.length)
+            gbuffers[i] = New!GBuffer(width, height, this, assetManager);
         deferredEnvPass = New!DeferredEnvironmentPass(gbuffer, shadowMap, assetManager);
         deferredLightPass = New!DeferredLightPass(gbuffer, lightManager, assetManager);
 
@@ -909,7 +916,7 @@ class Scene: BaseScene
 
         finalizerFilter = New!PostFilterFinalizer(null, null, assetManager);
 
-        particleMaterialBackend = New!ParticleBackend(gbuffer, assetManager);
+        // particleMaterialBackend = New!ParticleBackend(gbuffer, assetManager);
     }
 
     PostFilter addFilter(PostFilter f)
@@ -1123,11 +1130,20 @@ class Scene: BaseScene
         hblur.inputBuffer = sceneFramebuffer;
     }
 
+    void startGBufferInformationDownload(){ }
+
     override void onRender()
     {
+        static if(gbuffers.length!=1){
+            scope(success){
+                curGBuffer=(curGBuffer+1)%gbuffers.length;
+                deferredEnvPass.gbuffer=gbuffer;
+                deferredLightPass.gbuffer=gbuffer;
+            }
+        }
         renderShadows(&rc3d);
         gbuffer.render(&rc3d);
-
+        startGBufferInformationDownload();
         sceneFramebuffer.bind();
 
         RenderingContext rcDeferred;

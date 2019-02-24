@@ -250,6 +250,10 @@ class SkyBackend: GLSLMaterialBackend
         assert(0,"sacSkyBackend needs an invViewMatrix");
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+        assert(0,"TODO?");
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

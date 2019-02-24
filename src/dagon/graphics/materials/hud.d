@@ -99,7 +99,12 @@ class HUDMaterialBackend: GLSLMaterialBackend
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
-	final void setAlpha(float alpha){ }
+    final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+        assert(0,"TODO?");
+    }
+
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

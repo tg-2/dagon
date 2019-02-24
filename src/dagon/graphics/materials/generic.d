@@ -183,6 +183,7 @@ interface GenericMaterialBackend
     void setModelViewMatrix(Matrix4x4f modelViewMatrix);
 
     void setAlpha(float alpha);
+    void setInformation(Vector4f information);
 
     void bind(GenericMaterial mat, RenderingContext* rc);
     void unbind(GenericMaterial mat, RenderingContext* rc);

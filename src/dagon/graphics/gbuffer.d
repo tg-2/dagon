@@ -99,6 +99,8 @@ class GeometryPassBackend: GLSLMaterialBackend
 
         uniform float blurMask;
 
+        uniform vec4 information;
+
         in vec2 texCoord;
         in vec3 eyePosition;
         in vec3 eyeNormal;
@@ -112,6 +114,7 @@ class GeometryPassBackend: GLSLMaterialBackend
         layout(location = 3) out vec4 frag_normal;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_emission;
+        layout(location = 6) out vec4 frag_information;
 
         mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
         {
@@ -172,6 +175,7 @@ class GeometryPassBackend: GLSLMaterialBackend
             frag_normal = vec4(N, 1.0);
             frag_velocity = vec4(screenVelocity, 0.0, blurMask);
             frag_emission = vec4(emission, 1.0);
+            frag_information = information;
         }
     ";
 
@@ -199,6 +203,8 @@ class GeometryPassBackend: GLSLMaterialBackend
 
     GLint blurMaskLoc;
 
+    GLint informationLoc;
+
     this(Owner o)
     {
         super(o);
@@ -223,13 +229,17 @@ class GeometryPassBackend: GLSLMaterialBackend
         parallaxBiasLoc = glGetUniformLocation(shaderProgram, "parallaxBias");
 
         blurMaskLoc = glGetUniformLocation(shaderProgram, "blurMask");
-    }
 
+        informationLoc = glGetUniformLocation(shaderProgram, "information");
+    }
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr); // valid for rotation-translations
     }
     final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){
+        glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
@@ -253,6 +263,8 @@ class GeometryPassBackend: GLSLMaterialBackend
         glUniform1i(layerLoc, rc.layer);
 
         glUniform1f(blurMaskLoc, rc.blurMask);
+
+        glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
 
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
@@ -369,6 +381,9 @@ class GBuffer: Owner
     GLuint normalTexture = 0;
     GLuint velocityTexture = 0;
     GLuint emissionTexture = 0;
+    GLuint informationTexture = 0;
+
+    GLuint informationPBO = 0;
 
     this(uint w, uint h, Scene scene, Owner o)
     {
@@ -446,6 +461,15 @@ class GBuffer: Owner
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        glGenTextures(1, &informationTexture);
+        glBindTexture(GL_TEXTURE_2D, informationTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
@@ -454,16 +478,32 @@ class GBuffer: Owner
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, normalTexture, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, velocityTexture, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, emissionTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, informationTexture, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
-        GLenum[6] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5];
-        glDrawBuffers(6, bufs.ptr);
+        GLenum[7] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6];
+        glDrawBuffers(bufs.length, bufs.ptr);
 
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE)
             writeln(status);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glGenBuffers(1, &informationPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, informationPBO);
+        glBufferData(GL_PIXEL_PACK_BUFFER, Vector4f.sizeof, null, GL_STREAM_READ);
+    }
+    final void startInformationDownload(int x,int y){
+        glBindBuffer(GL_PIXEL_PACK_BUFFER,informationPBO);
+        glGetTextureSubImage(informationTexture,0,x,y,0,1,1,1,GL_RGBA,GL_FLOAT,Vector4f.sizeof,null);
+    }
+    final Vector4f getInformation(){
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, informationPBO);
+        auto pointer=glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        auto information=*cast(Vector4f*)pointer;
+        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        return information;
     }
 
     ~this()
@@ -485,11 +525,15 @@ class GBuffer: Owner
             glDeleteTextures(1, &normalTexture);
         if (glIsTexture(emissionTexture))
             glDeleteTextures(1, &emissionTexture);
+        if (glIsTexture(emissionTexture))
+            glDeleteTextures(1, &informationTexture);
     }
 
     void bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glEnablei(GL_BLEND, 6);
+        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     void unbind()

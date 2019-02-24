@@ -82,6 +82,8 @@ class ShadelessBackend: GLSLMaterialBackend
         uniform float alpha;
         uniform float energy;
 
+        uniform vec4 information;
+
         in vec3 eyePosition;
         in vec2 texCoord;
 
@@ -89,6 +91,7 @@ class ShadelessBackend: GLSLMaterialBackend
         layout(location = 2) out vec4 frag_position;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_luma;
+        layout(location = 6) out vec4 frag_information;
 
         float luminance(vec3 color)
         {
@@ -111,6 +114,7 @@ class ShadelessBackend: GLSLMaterialBackend
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
+            frag_information = information;
         }
     ";
 
@@ -125,6 +129,8 @@ class ShadelessBackend: GLSLMaterialBackend
     GLint alphaLoc;
     GLint energyLoc;
 
+    GLint informationLoc;
+
     this(Owner o)
     {
         super(o);
@@ -136,6 +142,8 @@ class ShadelessBackend: GLSLMaterialBackend
         colorLoc = glGetUniformLocation(shaderProgram, "color");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
+
+        informationLoc = glGetUniformLocation(shaderProgram, "information");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
@@ -146,6 +154,9 @@ class ShadelessBackend: GLSLMaterialBackend
     }
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
+    }
+    final void setInformation(Vector4f information){
+        glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
@@ -185,6 +196,8 @@ class ShadelessBackend: GLSLMaterialBackend
         glUniform3fv(colorLoc,1,color.arrayof.ptr);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
+
+        glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

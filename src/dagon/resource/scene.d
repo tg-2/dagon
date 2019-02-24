@@ -364,7 +364,7 @@ class Scene: BaseScene
     RenderingContext rc2d;
     View view;
 
-    GBuffer[2] gbuffers;
+    GBuffer[1] gbuffers;
     static if(gbuffers.length!=1) int curGBuffer=0;
     else enum curGBuffer=0;
 
@@ -1143,7 +1143,6 @@ class Scene: BaseScene
         }
         renderShadows(&rc3d);
         gbuffer.render(&rc3d);
-        startGBufferInformationDownload();
         sceneFramebuffer.bind();
 
         RenderingContext rcDeferred;
@@ -1158,8 +1157,13 @@ class Scene: BaseScene
         renderBackgroundEntities3D(&rc3d);
         deferredEnvPass.render(&rcDeferred, &rc3d);
         deferredLightPass.render(&rcDeferred, &rc3d);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, gbuffer.informationTexture, 0);
+        GLenum[7] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_COLOR_ATTACHMENT6];
+        glDrawBuffers(bufs.length, bufs.ptr);
         renderTransparentEntities3D(&rc3d);
         particleSystem.render(&rc3d);
+        startGBufferInformationDownload();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, 0, 0);
 
         sceneFramebuffer.unbind();
 

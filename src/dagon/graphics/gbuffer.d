@@ -533,7 +533,7 @@ class GBuffer: Owner
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glEnablei(GL_BLEND, 6);
-        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunci(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     void unbind()

@@ -262,8 +262,8 @@ class EventManager
                 case SDL_MOUSEMOTION:
                     mouseX = event.motion.x;
                     mouseY = event.motion.y;
-                    mouseRelX = event.motion.xrel;
-                    mouseRelY = event.motion.yrel;
+                    mouseRelX += event.motion.xrel;
+                    mouseRelY += event.motion.yrel;
                     break;
 
                 case SDL_MOUSEBUTTONDOWN:

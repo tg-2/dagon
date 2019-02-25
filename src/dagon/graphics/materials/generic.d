@@ -170,6 +170,11 @@ interface GenericMaterialBackend
         //auto invTransformation=rotation.inverse().toMatrix4x4*translationMatrix(-entity.position);
         setModelViewMatrix(rc.viewMatrix*modelMatrix);
     }
+    final void setTransformationScaled(Vector3f position, Quaternionf rotation, Vector3f scaling, RenderingContext* rc){
+        import dlib.math.transformation;
+        auto modelMatrix=translationMatrix(position)*rotation.toMatrix4x4;
+        setModelViewMatrix(rc.viewMatrix*modelMatrix*scaleMatrix(scaling));
+    }
     final void setSpriteTransformation(Vector3f position, RenderingContext* rc){
         import dlib.math.transformation;
         import dlib.math.utils;

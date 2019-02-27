@@ -970,6 +970,14 @@ class Scene: BaseScene
         timer = 0.0;
     }
 
+    void onViewUpdate(double dt){
+        if (view)
+        {
+            view.update(dt);
+            view.prepareRC(&rc3d);
+        }
+    }
+
     void onLogicsUpdate(double dt)
     {
     }
@@ -981,13 +989,8 @@ class Scene: BaseScene
 
         foreach(e; entities2D)
             e.processEvents();+/
-
+        onViewUpdate(dt);
         timer += dt;
-        if (view)
-        {
-            view.update(dt);
-            view.prepareRC(&rc3d);
-        }
         while (timer >= fixedTimeStep)
         {
             timer -= fixedTimeStep;

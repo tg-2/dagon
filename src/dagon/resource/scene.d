@@ -989,14 +989,11 @@ class Scene: BaseScene
 
         foreach(e; entities2D)
             e.processEvents();+/
-        onViewUpdate(dt);
         timer += dt;
         while (timer >= fixedTimeStep)
         {
             timer -= fixedTimeStep;
 
-            rc3d.time += fixedTimeStep;
-            rc2d.time += fixedTimeStep;
 /+
             foreach(e; entities3D)
                 e.update(fixedTimeStep);
@@ -1004,33 +1001,35 @@ class Scene: BaseScene
             foreach(e; entities2D)
                 e.update(fixedTimeStep);
 +/
-            particleSystem.update(fixedTimeStep);
+            //particleSystem.update(fixedTimeStep);
 
             onLogicsUpdate(fixedTimeStep);
 
             //environment.update(fixedTimeStep);
-
-            if (view) // TODO: allow to turn this off
-            {
-                Vector3f cameraDirection = -view.invViewMatrix.forward;
-                //cameraDirection.y = 0.0f;
-                //cameraDirection = cameraDirection.normalized;
-                Vector3f round(Vector3f a, float resolution){
-                    return Vector3f(a.x-fmod(a.x,resolution), a.y-fmod(a.y,resolution), a.z-fmod(a.z,resolution));
-                }
-                auto res1=shadowMap.projSize[0]/shadowMapResolution*5;
-                shadowMap.area[0].position = round(view.cameraPosition + cameraDirection * (shadowMap.projSize[0]  * 0.48f - 1.0f), res1);
-                foreach(i;1..shadowMap.projSize.length){
-                    auto res=shadowMap.projSize[i]/shadowMapResolution*(i==1?10:100);
-                    shadowMap.area[i].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize[i] * 0.5f, res);
-                }
-                //shadowMap.area[2].position = Vector3f(1280,1280,0);
-            }
-
-            shadowMap.update(&rc3d, fixedTimeStep);
-
-            lightManager.update(&rc3d);
         }
+        rc3d.time += dt;
+        rc2d.time += dt;
+
+        onViewUpdate(dt);
+
+        if (view) // TODO: allow to turn this off
+        {
+            Vector3f cameraDirection = -view.invViewMatrix.forward;
+            //cameraDirection.y = 0.0f;
+            //cameraDirection = cameraDirection.normalized;
+            Vector3f round(Vector3f a, float resolution){
+                return Vector3f(a.x-fmod(a.x,resolution), a.y-fmod(a.y,resolution), a.z-fmod(a.z,resolution));
+            }
+            auto res1=shadowMap.projSize[0]/shadowMapResolution*5;
+            shadowMap.area[0].position = round(view.cameraPosition + cameraDirection * (shadowMap.projSize[0]  * 0.48f - 1.0f), res1);
+            foreach(i;1..shadowMap.projSize.length){
+                auto res=shadowMap.projSize[i]/shadowMapResolution*(i==1?10:100);
+                shadowMap.area[i].position = round(view.cameraPosition + cameraDirection * shadowMap.projSize[i] * 0.5f, res);
+            }
+            //shadowMap.area[2].position = Vector3f(1280,1280,0);
+        }
+        shadowMap.update(&rc3d, dt);
+        lightManager.update(&rc3d);
     }
 
     void renderShadows(RenderingContext* rc)

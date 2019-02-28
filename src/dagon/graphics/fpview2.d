@@ -58,8 +58,7 @@ class FirstPersonView2: EventListener, View
         camEntity.controller = camera;
     }
 
-    void update(double dt)
-    {
+    void control(){
         processEvents();
 
         if (_active)
@@ -70,7 +69,10 @@ class FirstPersonView2: EventListener, View
             camera.pitch += pitch_m;
             camera.turn += turn_m;
         }
+    }
 
+    void update(double dt)
+    {
         camera.update(dt);
     }
 

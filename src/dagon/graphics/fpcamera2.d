@@ -42,39 +42,32 @@ import dagon.logics.controller;
 class FirstPersonCamera2: EntityController
 {
     Matrix4x4f transformation;
-    Matrix4x4f weaponTransformation;
     Matrix4x4f characterMatrix;
     Matrix4x4f invTransformation;
     Vector3f position;
     Vector3f eyePosition;
-    Vector3f weaponPosition;
 
     float turn = 0.0f;
     float pitch = -90.0f;
     float roll = 0.0f;
-    
-    float weaponPitch = 0.0f;
-    float weaponRoll = 0.0f;
-    
-    float weaponPitchCoef = 1.0f;
-    
+
+    float pitchOffset = 0.0f;
+
     this(Entity e)
     {
         super(e);
         this.position = e.position;
         eyePosition = Vector3f(0.0f, 0.0f, 1.0f);
-        weaponPosition = Vector3f(0.0f, 1.0f, 0.0f);
-        transformation = worldTrans();       
+        transformation = worldTrans();
         invTransformation = transformation.inverse;
-        weaponTransformation = transformation * translationMatrix(weaponPosition);
     }
-    
+
     Matrix4x4f worldTrans()
-    {  
+    {
         Matrix4x4f m = translationMatrix(position + eyePosition);
         m *= rotationMatrix(Axis.z, degtorad(turn));
         characterMatrix = m;
-        m *= rotationMatrix(Axis.x, degtorad(pitch));
+        m *= rotationMatrix(Axis.x, degtorad(pitch+pitchOffset));
         m *= rotationMatrix(Axis.y, degtorad(roll));
         return m;
     }
@@ -83,13 +76,7 @@ class FirstPersonCamera2: EntityController
     {
         transformation = worldTrans();
         invTransformation = transformation.inverse;
-        
-        weaponTransformation = translationMatrix(position + eyePosition);
-        weaponTransformation *= rotationMatrix(Axis.y, degtorad(turn));
-        weaponTransformation *= rotationMatrix(Axis.x, degtorad(weaponPitch));
-        weaponTransformation *= rotationMatrix(Axis.z, degtorad(weaponRoll));
-        weaponTransformation *= translationMatrix(weaponPosition);
-        
+
         entity.transformation = transformation;
         entity.invTransformation = invTransformation;
     }
@@ -98,7 +85,7 @@ class FirstPersonCamera2: EntityController
     {
         return invTransformation;
     }
-    
+
     Matrix4x4f invViewMatrix()
     {
         return transformation;

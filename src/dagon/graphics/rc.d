@@ -114,10 +114,10 @@ struct RenderingContext
         shadowMode = false;
     }
 
-    void initPerspective(int width, int height, Environment env, float fov, float znear, float zfar)
+    void initPerspective(int width, int height, float aspect, Environment env, float fov, float znear, float zfar)
     {
         init(width, height, env);
-        projectionMatrix = perspectiveMatrix(fov, cast(float)width/cast(float)height, znear, zfar);
+        projectionMatrix = perspectiveMatrix(fov, aspect, znear, zfar);
     }
 
     void initOrtho(int width, int height, Environment env, float znear, float zfar)

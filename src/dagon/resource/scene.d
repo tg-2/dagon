@@ -661,17 +661,19 @@ class Scene: BaseScene
     double fixedTimeStep = 1.0 / 60.0;
 
     int width, height;
+    float aspectDistortion;
 
-    this(int width, int height, SceneManager smngr)
+    this(int width, int height, float aspectDistortion, SceneManager smngr)
     {
         super(smngr);
 
         this.width=width;
         this.height=height;
+        this.aspectDistortion=aspectDistortion;
 
         rc3d.init(width, height, environment);
-        auto aspectRatio=cast(float)width/cast(float)height;
-        rc3d.projectionMatrix = perspectiveMatrix(60.0f, aspectRatio, 0.1f, 10000.0f);
+        auto aspectRatio = cast(float)width/cast(float)height*aspectDistortion;
+        rc3d.projectionMatrix = perspectiveMatrix(62.0f, aspectRatio, 0.1f, 10000.0f);
 
         rc2d.init(width, height, environment);
         rc2d.projectionMatrix = orthoMatrix(0.0f, width, 0.0f, height, 0.0f, 100.0f);
@@ -964,7 +966,8 @@ class Scene: BaseScene
 
     override void onStart()
     {
-        rc3d.initPerspective(width, height, environment, 60.0f, 0.1f, 10000.0f);
+        auto aspectRatio=cast(float)width/cast(float)height*aspectDistortion;
+        rc3d.initPerspective(width, height, aspectRatio, environment, 62.0f, 0.1f, 10000.0f);
         rc2d.initOrtho(width, height, environment, 0.0f, 100.0f);
 
         timer = 0.0;

@@ -286,8 +286,6 @@ class Application: EventListener
 
     void beginRender()
     {
-        eventManager.update();
-        processEvents();
     }
 
     void endRender()

@@ -1168,7 +1168,6 @@ class Scene: BaseScene
         glDrawBuffers(bufs.length, bufs.ptr);
         renderTransparentEntities3D(&rc3d);
         particleSystem.render(&rc3d);
-        startGBufferInformationDownload();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, 0, 0);
 
         sceneFramebuffer.unbind();
@@ -1215,6 +1214,10 @@ class Scene: BaseScene
         prepareViewport(null, true);
         finalizerFilter.inputBuffer = nextInput;
         finalizerFilter.render(&rc2d);
+
+        eventManager.update();
+        processEvents();
+        startGBufferInformationDownload();
 
         renderEntities2D(&rc2d);
     }

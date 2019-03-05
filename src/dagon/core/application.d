@@ -274,6 +274,7 @@ class Application: EventListener
 
     void run()
     {
+        onRender(); // for lazy initialization
         eventManager.update();
         while(eventManager.running)
         {

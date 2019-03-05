@@ -91,6 +91,8 @@ class EventManager
     int mouseY = 0;
     int mouseRelX = 0;
     int mouseRelY = 0;
+    int mouseWheelX = 0;
+    int mouseWheelY = 0;
     bool enableKeyRepeat = false;
 
     double deltaTime = 0.0;
@@ -104,7 +106,7 @@ class EventManager
     uint windowWidth;
     uint windowHeight;
     bool windowFocused = true;
-    
+
     SDL_GameController* controller = null;
     SDL_Joystick* joystick = null;
 
@@ -118,18 +120,18 @@ class EventManager
         //auto videoInfo = SDL_GetVideoInfo();
         //videoWidth = videoInfo.current_w;
         //videoHeight = videoInfo.current_h;
-        
+
         SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
         if (SDL_IsGameController(0))
         {
             controller = SDL_GameControllerOpen(0);
-            
+
             SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-            
+
             if (SDL_GameControllerMapping(controller) is null)
                 writeln("Warning: no mapping found for controller!");
-            
+
             SDL_GameControllerEventState(SDL_ENABLE);
         }
         else
@@ -148,7 +150,7 @@ class EventManager
         else
             writeln("Warning: event stack overflow");
     }
-    
+
     void generateAssetReloadEvent(Asset asset)
     {
         Event e = Event(EventType.AssetReload);
@@ -173,22 +175,22 @@ class EventManager
         e.userCode = code;
         addUserEvent(e);
     }
-    
+
     bool gameControllerAvailable()
     {
         return (controller !is null);
     }
-    
+
     bool joystickAvailable()
     {
         return (joystick !is null || controller !is null);
     }
-    
+
     float gameControllerAxis(int axis)
     {
         return cast(float)(SDL_GameControllerGetAxis(controller, cast(SDL_GameControllerAxis)axis)) / 32768.0f;
     }
-    
+
     float joystickAxis(int axis)
     {
         if (joystick)
@@ -207,9 +209,11 @@ class EventManager
     {
         numEvents = 0;
         updateTimer();
-        
+
         mouseRelX = 0;
         mouseRelY = 0;
+        mouseWheelX = 0;
+        mouseWheelY = 0;
 
         for (uint i = 0; i < numUserEvents; i++)
         {
@@ -279,14 +283,16 @@ class EventManager
                     e.button = event.button.button;
                     addEvent(e);
                     break;
-                    
+
                 case SDL_MOUSEWHEEL:
                     e = Event(EventType.MouseWheel);
                     e.mouseWheelX = event.wheel.x;
                     e.mouseWheelY = event.wheel.y;
+                    mouseWheelX += event.wheel.x;
+                    mouseWheelY += event.wheel.y;
                     addEvent(e);
                     break;
-                    
+
                 case SDL_JOYBUTTONDOWN:
                     if (event.jbutton.state == SDL_PRESSED)
                         e = Event(EventType.JoystickButtonDown);
@@ -295,8 +301,8 @@ class EventManager
                     e.joystickButton = event.jbutton.button;
                     addEvent(e);
                     break;
-                    
-                case SDL_JOYBUTTONUP: 
+
+                case SDL_JOYBUTTONUP:
                     // TODO: add state modification
                     if (event.jbutton.state == SDL_PRESSED)
                         e = Event(EventType.JoystickButtonDown);
@@ -316,7 +322,7 @@ class EventManager
                     addEvent(e);
                     break;
 
-                case SDL_CONTROLLERBUTTONUP: 
+                case SDL_CONTROLLERBUTTONUP:
                     // TODO: add state modification
                     if (event.cbutton.state == SDL_PRESSED)
                         e = Event(EventType.JoystickButtonDown);
@@ -331,17 +337,17 @@ class EventManager
                     e = Event(EventType.JoystickAxisMotion);
                     e.joystickAxis = event.caxis.axis;
                     e.joystickAxisValue = cast(float)event.caxis.value / 32768.0f;
-                    
+
                     if (controller)
                     {
                         if (e.joystickAxis == 0)
                             e.joystickAxisValue = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY);
                         if (e.joystickAxis == 1)
                             e.joystickAxisValue = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
-                            
-                        e.joystickAxisValue = e.joystickAxisValue / 32768.0f; 
+
+                        e.joystickAxisValue = e.joystickAxisValue / 32768.0f;
                     }
-                    
+
                     addEvent(e);
                     break;
 
@@ -446,7 +452,7 @@ class EventManager
     {
         SDL_ShowCursor(mode);
     }
-    
+
     float aspectRatio()
     {
         return cast(float)windowWidth / cast(float)windowHeight;

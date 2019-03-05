@@ -274,11 +274,12 @@ class Application: EventListener
 
     void run()
     {
+        eventManager.update();
         while(eventManager.running)
         {
             beginRender();
-            onRender();
             onUpdate(eventManager.deltaTime);
+            onRender();
             endRender();
         }
     }

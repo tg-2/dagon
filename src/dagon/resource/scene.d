@@ -69,6 +69,7 @@ import dagon.graphics.materials.sacSky;
 import dagon.graphics.materials.sacSun;
 import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
+import dagon.graphics.materials.hud2;
 import dagon.graphics.materials.colorHUD;
 import dagon.graphics.materials.particle;
 import dagon.graphics.framebuffer;
@@ -654,6 +655,7 @@ class Scene: BaseScene
     ShapeQuad loadingProgressBar;
     Entity eLoadingProgressBar;
     HUDMaterialBackend hudMaterialBackend;
+    HUDMaterialBackend2 hudMaterialBackend2;
     ColorHUDMaterialBackend colorHUDMaterialBackend;
     GenericMaterial mLoadingProgressBar;
 
@@ -682,6 +684,7 @@ class Scene: BaseScene
         eLoadingProgressBar = New!Entity(eventManager, assetManager);
         eLoadingProgressBar.drawable = loadingProgressBar;
         hudMaterialBackend = New!HUDMaterialBackend(assetManager);
+        hudMaterialBackend2 = New!HUDMaterialBackend2(assetManager);
         colorHUDMaterialBackend = New!ColorHUDMaterialBackend(assetManager);
         mLoadingProgressBar = createMaterial(hudMaterialBackend);
         mLoadingProgressBar.diffuse = Color4f(1, 1, 1, 1);

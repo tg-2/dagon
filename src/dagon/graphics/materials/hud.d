@@ -105,7 +105,6 @@ class HUDMaterialBackend: GLSLMaterialBackend
         assert(0,"TODO?");
     }
 
-
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
         auto idiffuse = "diffuse" in mat.inputs;

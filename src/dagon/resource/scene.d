@@ -860,6 +860,7 @@ class Scene: BaseScene
     override void onAllocate()
     {
         if(width==0||height==0){
+            eventManager.update();
             width=eventManager.windowWidth;
             height=eventManager.windowHeight;
         }

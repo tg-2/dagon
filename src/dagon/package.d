@@ -77,6 +77,7 @@ public
     import dagon.graphics.material;
     import dagon.graphics.environment;
     import dagon.graphics.mesh;
+    import dagon.graphics.mesh2D;
     import dagon.graphics.boneMesh;
     import dagon.graphics.terrainMesh;
     import dagon.graphics.animmodel;
@@ -93,6 +94,9 @@ public
     import dagon.graphics.materials.shadeless;
     import dagon.graphics.materials.sky;
     import dagon.graphics.materials.hud;
+    import dagon.graphics.materials.hud2;
+    import dagon.graphics.materials.colorHUD;
+    import dagon.graphics.materials.minimap;
     import dagon.graphics.materials.terrain2;
     import dagon.graphics.materials.particle;
     

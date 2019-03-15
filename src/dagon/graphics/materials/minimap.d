@@ -41,6 +41,7 @@ import derelict.opengl;
 
 import dagon.core.ownership;
 import dagon.graphics.rc;
+import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
@@ -76,13 +77,15 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         uniform vec2 center;
         uniform float radiusSq;
 
+        uniform vec4 colorMultiplier;
+
         in vec2 screenPos;
         in vec2 texCoord;
         out vec4 frag_color;
 
         void main()
         {
-            frag_color = texture(diffuseTexture, texCoord);
+            frag_color = colorMultiplier*texture(diffuseTexture, texCoord);
             vec2 diff = screenPos-center;
             if(dot(diff,diff)>radiusSq)
                 discard;
@@ -97,6 +100,7 @@ class MinimapMaterialBackend: GLSLMaterialBackend
     GLint diffuseTextureLoc;
     GLint centerLoc;
     GLint radiusSqLoc;
+    GLint colorMultiplierLoc;
 
     this(Owner o)
     {
@@ -107,6 +111,7 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         centerLoc = glGetUniformLocation(shaderProgram, "center");
         radiusSqLoc = glGetUniformLocation(shaderProgram, "radiusSq");
+        colorMultiplierLoc = glGetUniformLocation(shaderProgram, "colorMultiplier");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
@@ -118,13 +123,22 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         assert(0,"TODO?");
     }
 
-    Color4f backgroundColor=Color4f(0.0f,0.0f,0.0f,1.0f);
+    Color4f colorMultiplier=Vector4f(1.0f,1.0f,1.0f,1.0f);
     Vector2f center=Vector2f(460,400);
     float radius=80;
 
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
+        glUniform1i(diffuseTextureLoc, 0);
+    }
+    final void setColorMultiplier(Color4f colorMultiplier){
+        glUniform4fv(colorMultiplierLoc,1,colorMultiplier.arrayof.ptr);
+    }
+
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
+        auto idiffuse = mat?"diffuse" in mat.inputs:null;
         glUseProgram(shaderProgram);
 
         // Matrices
@@ -132,16 +146,19 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
         // Texture 0 - diffuse texture
-        if (idiffuse.texture is null)
+        if (idiffuse && idiffuse.texture is null)
         {
             Color4f color = Color4f(idiffuse.asVector4f);
             idiffuse.texture = makeOnePixelTexture(mat, color);
         }
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.bind();
-        glUniform1i(diffuseTextureLoc, 0);
+        if(idiffuse){
+            glActiveTexture(GL_TEXTURE0);
+            idiffuse.texture.bind();
+            glUniform1i(diffuseTextureLoc, 0);
+        }
         glUniform2fv(centerLoc,1,center.arrayof.ptr);
         glUniform1f(radiusSqLoc,radius*radius);
+        glUniform4fv(colorMultiplierLoc,1,colorMultiplier.arrayof.ptr);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

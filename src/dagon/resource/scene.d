@@ -71,6 +71,7 @@ import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
 import dagon.graphics.materials.hud2;
 import dagon.graphics.materials.colorHUD;
+import dagon.graphics.materials.minimap;
 import dagon.graphics.materials.particle;
 import dagon.graphics.framebuffer;
 import dagon.graphics.gbuffer;
@@ -657,6 +658,7 @@ class Scene: BaseScene
     HUDMaterialBackend hudMaterialBackend;
     HUDMaterialBackend2 hudMaterialBackend2;
     ColorHUDMaterialBackend colorHUDMaterialBackend;
+    MinimapMaterialBackend minimapMaterialBackend;
     GenericMaterial mLoadingProgressBar;
 
     double timer = 0.0;
@@ -686,6 +688,7 @@ class Scene: BaseScene
         hudMaterialBackend = New!HUDMaterialBackend(assetManager);
         hudMaterialBackend2 = New!HUDMaterialBackend2(assetManager);
         colorHUDMaterialBackend = New!ColorHUDMaterialBackend(assetManager);
+        minimapMaterialBackend = New!MinimapMaterialBackend(assetManager);
         mLoadingProgressBar = createMaterial(hudMaterialBackend);
         mLoadingProgressBar.diffuse = Color4f(1, 1, 1, 1);
         eLoadingProgressBar.material = mLoadingProgressBar;
@@ -945,8 +948,9 @@ class Scene: BaseScene
     override void onLoading(float percentage)
     {
         glEnable(GL_SCISSOR_TEST);
-        glScissor(0, 0, width, height);
-        glViewport(0, 0, width, height);
+        auto yOffset=eventManager.windowHeight-height;
+        glScissor(0, 0+yOffset, width, height);
+        glViewport(0, 0+yOffset, width, height);
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1215,6 +1219,10 @@ class Scene: BaseScene
             f.outputBuffer.unbind();
         }
 
+        glScissor(0, 0, eventManager.windowWidth, eventManager.windowHeight);
+        glViewport(0, 0, eventManager.windowWidth, eventManager.windowHeight);
+        glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
         prepareViewport(null, true);
         finalizerFilter.inputBuffer = nextInput;
         finalizerFilter.render(&rc2d);

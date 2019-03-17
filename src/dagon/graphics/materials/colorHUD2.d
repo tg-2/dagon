@@ -25,7 +25,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
-module dagon.graphics.materials.minimap;
+module dagon.graphics.materials.colorHUD2;
 
 import std.stdio;
 import std.math;
@@ -41,11 +41,10 @@ import derelict.opengl;
 
 import dagon.core.ownership;
 import dagon.graphics.rc;
-import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
-class MinimapMaterialBackend: GLSLMaterialBackend
+class ColorHUDMaterialBackend2: GLSLMaterialBackend
 {
     private string vsText =
     q{
@@ -55,40 +54,28 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         uniform mat4 projectionMatrix;
 
         layout (location = 0) in vec2 va_Vertex;
-        layout (location = 1) in vec2 va_Texcoord;
+        layout (location = 1) in float va_Alpha;
 
-        out vec2 screenPos;
-        out vec2 texCoord;
+        out float alpha;
 
         void main()
         {
-            vec4 screenPos4 = modelViewMatrix * vec4(va_Vertex, 0.0, 1.0);
-            gl_Position = projectionMatrix * screenPos4;
-            screenPos = screenPos4.xy;
-            texCoord = va_Texcoord;
+            alpha = va_Alpha;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex, 0.0, 1.0);
         }
     };
 
     private string fsText = q{
         #version 330 core
 
-        uniform sampler2D diffuseTexture;
+        uniform vec3 color;
+        in float alpha;
 
-        uniform vec2 center;
-        uniform float radiusSq;
-
-        uniform vec4 color;
-
-        in vec2 screenPos;
-        in vec2 texCoord;
         out vec4 frag_color;
 
         void main()
         {
-            vec2 diff = screenPos-center;
-            if(dot(diff,diff)>radiusSq)
-                discard;
-            frag_color = color*texture(diffuseTexture, texCoord);
+            frag_color = vec4(color, alpha);
         }
     };
 
@@ -97,9 +84,6 @@ class MinimapMaterialBackend: GLSLMaterialBackend
 
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
-    GLint diffuseTextureLoc;
-    GLint centerLoc;
-    GLint radiusSqLoc;
     GLint colorLoc;
 
     this(Owner o)
@@ -108,9 +92,6 @@ class MinimapMaterialBackend: GLSLMaterialBackend
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
-        diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
-        centerLoc = glGetUniformLocation(shaderProgram, "center");
-        radiusSqLoc = glGetUniformLocation(shaderProgram, "radiusSq");
         colorLoc = glGetUniformLocation(shaderProgram, "color");
     }
 
@@ -122,43 +103,26 @@ class MinimapMaterialBackend: GLSLMaterialBackend
         //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
         assert(0,"TODO?");
     }
-
-    Color4f color=Vector4f(1.0f,1.0f,1.0f,1.0f);
-    Vector2f center=Vector2f(460,400);
-    float radius=80;
-
-    final void bindDiffuse(Texture diffuse){
-        glActiveTexture(GL_TEXTURE0);
-        diffuse.bind();
-        glUniform1i(diffuseTextureLoc, 0);
-    }
-    final void setColor(Color4f color){
-        glUniform4fv(colorLoc,1,color.arrayof.ptr);
+    final void setColor(Vector4f color){
+        glUniform3fv(colorLoc, 1, color.arrayof.ptr);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = mat?"diffuse" in mat.inputs:null;
         glUseProgram(shaderProgram);
-
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
-        // Texture 0 - diffuse texture
-        if (idiffuse && idiffuse.texture is null)
-        {
-            Color4f color = Color4f(idiffuse.asVector4f);
-            idiffuse.texture = makeOnePixelTexture(mat, color);
+        if(mat){
+            auto icolor = "color" in mat.inputs;
+            // diffuse color
+            Color4f color = Color4f(icolor.asVector4f);
+            glUniform3fv(colorLoc, 1, color.arrayof.ptr);
+        }else{
+            glEnablei(GL_BLEND, 0);
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        if(idiffuse){
-            glActiveTexture(GL_TEXTURE0);
-            idiffuse.texture.bind();
-            glUniform1i(diffuseTextureLoc, 0);
-        }
-        glUniform2fv(centerLoc,1,center.arrayof.ptr);
-        glUniform1f(radiusSqLoc,radius*radius);
-        glUniform4fv(colorLoc,1,color.arrayof.ptr);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

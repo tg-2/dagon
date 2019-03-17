@@ -71,6 +71,7 @@ import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
 import dagon.graphics.materials.hud2;
 import dagon.graphics.materials.colorHUD;
+import dagon.graphics.materials.colorHUD2;
 import dagon.graphics.materials.minimap;
 import dagon.graphics.materials.particle;
 import dagon.graphics.framebuffer;
@@ -658,6 +659,7 @@ class Scene: BaseScene
     HUDMaterialBackend hudMaterialBackend;
     HUDMaterialBackend2 hudMaterialBackend2;
     ColorHUDMaterialBackend colorHUDMaterialBackend;
+    ColorHUDMaterialBackend2 colorHUDMaterialBackend2;
     MinimapMaterialBackend minimapMaterialBackend;
     GenericMaterial mLoadingProgressBar;
 
@@ -688,6 +690,7 @@ class Scene: BaseScene
         hudMaterialBackend = New!HUDMaterialBackend(assetManager);
         hudMaterialBackend2 = New!HUDMaterialBackend2(assetManager);
         colorHUDMaterialBackend = New!ColorHUDMaterialBackend(assetManager);
+        colorHUDMaterialBackend2 = New!ColorHUDMaterialBackend2(assetManager);
         minimapMaterialBackend = New!MinimapMaterialBackend(assetManager);
         mLoadingProgressBar = createMaterial(hudMaterialBackend);
         mLoadingProgressBar.diffuse = Color4f(1, 1, 1, 1);

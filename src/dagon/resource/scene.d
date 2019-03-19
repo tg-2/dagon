@@ -667,14 +667,16 @@ class Scene: BaseScene
     double fixedTimeStep = 1.0 / 60.0;
 
     int width, height;
+    float screenScaling;
     float aspectDistortion;
 
-    this(int width, int height, float aspectDistortion, SceneManager smngr)
+    this(int width, int height, float screenScaling, float aspectDistortion, SceneManager smngr)
     {
         super(smngr);
 
         this.width=width;
         this.height=height;
+        this.screenScaling=screenScaling;
         this.aspectDistortion=aspectDistortion;
 
         rc3d.init(width, height, environment);
@@ -1106,7 +1108,12 @@ class Scene: BaseScene
     void prepareViewport(Framebuffer b = null, bool move=false)
     {
         glEnable(GL_SCISSOR_TEST);
-        auto yOffset=move?eventManager.windowHeight-height:0;
+        int width=this.width, height=this.height, yOffset=0;
+        if(move){
+            width=cast(int)(width*screenScaling);
+            height=cast(int)(height*screenScaling);
+            yOffset=eventManager.windowHeight-height;
+        }
         if (b)
         {
             glScissor(0, 0+yOffset, b.width, b.height);

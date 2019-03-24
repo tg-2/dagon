@@ -41,6 +41,7 @@ import derelict.opengl;
 
 import dagon.core.ownership;
 import dagon.graphics.rc;
+import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
@@ -103,6 +104,11 @@ class HUDMaterialBackend2: GLSLMaterialBackend
     final void setInformation(Vector4f information){
         //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
         assert(0,"TODO?");
+    }
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
+        glUniform1i(diffuseTextureLoc, 0);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)

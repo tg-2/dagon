@@ -41,6 +41,7 @@ import derelict.opengl;
 
 import dagon.core.ownership;
 import dagon.graphics.rc;
+import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
@@ -68,7 +69,7 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
     private string fsText = q{
         #version 330 core
 
-	    uniform vec4 color;
+        uniform vec4 color;
         uniform sampler2D diffuseTexture;
 
         in vec2 texCoord;
@@ -86,7 +87,7 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
 
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
-	GLint colorLoc;
+    GLint colorLoc;
     GLint diffuseTextureLoc;
 
     this(Owner o)
@@ -110,32 +111,38 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
     final void setColor(Vector4f color){
         glUniform4fv(colorLoc, 1, color.arrayof.ptr);
     }
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
+    }
 
-	override void bind(GenericMaterial mat, RenderingContext* rc)
+    override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
-        auto icolor = "color" in mat.inputs;
-        
         glUseProgram(shaderProgram);
 
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
-        // Texture 0 - diffuse texture
-        if (idiffuse.texture is null)
-        {
-            Color4f color = Color4f(idiffuse.asVector4f);
-            idiffuse.texture = makeOnePixelTexture(mat, color);
+        if(mat){
+            auto idiffuse = "diffuse" in mat.inputs;
+            auto icolor = "color" in mat.inputs;
+
+            // Texture 0 - diffuse texture
+            if (idiffuse.texture is null)
+            {
+                Color4f color = Color4f(idiffuse.asVector4f);
+                idiffuse.texture = makeOnePixelTexture(mat, color);
+            }
+            glActiveTexture(GL_TEXTURE0);
+            idiffuse.texture.bind();
+            Color4f color = Color4f(icolor.asVector4f);
+            glUniform4fv(colorLoc, 1, color.arrayof.ptr);
         }
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.bind();
-        Color4f color = Color4f(icolor.asVector4f);
-        glUniform4fv(colorLoc, 1, color.arrayof.ptr);
         glUniform1i(diffuseTextureLoc, 0);
     }
 
-	override void unbind(GenericMaterial mat, RenderingContext* rc)
+    override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
         glUseProgram(0);
     }

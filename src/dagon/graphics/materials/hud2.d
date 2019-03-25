@@ -108,7 +108,6 @@ class HUDMaterialBackend2: GLSLMaterialBackend
     final void bindDiffuse(Texture diffuse){
         glActiveTexture(GL_TEXTURE0);
         diffuse.bind();
-        glUniform1i(diffuseTextureLoc, 0);
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)

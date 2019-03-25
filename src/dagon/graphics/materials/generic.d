@@ -181,10 +181,22 @@ interface GenericMaterialBackend
         setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix);
     }
     final void setSpriteTransformationScaled(Vector3f position, float scaling, RenderingContext* rc){
+        setSpriteTransformationScaled(position,Vector3f(scaling,scaling,scaling),rc);
+    }
+    final void setSpriteTransformationScaled(Vector3f position, Vector3f scaling, RenderingContext* rc){
         import dlib.math.transformation;
         import dlib.math.utils;
-        setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*scaleMatrix(Vector3f(scaling,scaling,scaling)));
+        setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*scaleMatrix(scaling));
     }
+    final void setSpriteTransformationScaledPreprocess(Vector3f position, float scaling, Vector3f offset,Vector3f prescaling,RenderingContext* rc){
+        setSpriteTransformationScaledPreprocess(position,Vector3f(scaling,scaling,scaling),offset,prescaling,rc);
+    }
+    final void setSpriteTransformationScaledPreprocess(Vector3f position, Vector3f scaling, Vector3f offset,Vector3f prescaling,RenderingContext* rc){
+        import dlib.math.transformation;
+        import dlib.math.utils;
+        setModelViewMatrix(rc.viewMatrix*translationMatrix(position)*rc.invViewRotationMatrix*scaleMatrix(scaling)*translationMatrix(offset)*scaleMatrix(prescaling));
+    }
+
     void setModelViewMatrix(Matrix4x4f modelViewMatrix);
 
     void setAlpha(float alpha);

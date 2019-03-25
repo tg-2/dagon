@@ -270,7 +270,6 @@ class TerrainBackend2: GLSLMaterialBackend
     final void bindDiffuse(Texture diffuse){
         glActiveTexture(GL_TEXTURE0);
         diffuse.bind();
-        glUniform1i(diffuseTextureLoc, 0);
     }
     Texture defaultDetail=null;
     final void bindDetail(Texture detail){

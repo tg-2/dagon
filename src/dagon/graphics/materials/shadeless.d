@@ -156,6 +156,9 @@ class ShadelessBackend: GLSLMaterialBackend
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
     }
+    final void setEnergy(float energy){
+        glUniform1f(energyLoc, energy);
+    }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }

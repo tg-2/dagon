@@ -138,6 +138,9 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
             idiffuse.texture.bind();
             Color4f color = Color4f(icolor.asVector4f);
             glUniform4fv(colorLoc, 1, color.arrayof.ptr);
+        }else{
+            glEnablei(GL_BLEND, 0);
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glUniform1i(diffuseTextureLoc, 0);
     }

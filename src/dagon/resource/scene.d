@@ -227,6 +227,7 @@ class BaseScene: EventListener
     {
         if (canRun)
         {
+            eventManager.update();
             processEvents();
             assetManager.updateMonitor(dt);
             onUpdate(dt);
@@ -1237,8 +1238,6 @@ class Scene: BaseScene
         finalizerFilter.inputBuffer = nextInput;
         finalizerFilter.render(&rc2d);
 
-        eventManager.update();
-        processEvents();
         startGBufferInformationDownload();
 
         renderEntities2D(&rc2d);

@@ -58,19 +58,6 @@ class FirstPersonView2: EventListener, View
         camEntity.controller = camera;
     }
 
-    void control(){
-        processEvents();
-
-        if (_active)
-        {
-            float turn_m =  (eventManager.mouseRelX) * mouseFactor;
-            float pitch_m = (eventManager.mouseRelY) * mouseFactor;
-
-            camera.pitch += pitch_m;
-            camera.turn += turn_m;
-        }
-    }
-
     void update(double dt)
     {
         camera.update(dt);

@@ -36,6 +36,7 @@ import std.getopt;
 import std.string;
 import std.file;
 import core.stdc.stdlib;
+import core.stdc.signal;
 
 import derelict.util.exception;
 import derelict.sdl2.sdl;
@@ -190,9 +191,9 @@ class Application: EventListener
             DerelictFT.load();
         }
 
-        if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
+        if (SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE) == -1)
             exitWithError("Failed to init SDL: " ~ to!string(SDL_GetError()));
-
+        signal(SIGINT, SIG_DFL);
         width = winWidth;
         height = winHeight;
 

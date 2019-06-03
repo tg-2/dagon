@@ -112,22 +112,27 @@ class HUDMaterialBackend: GLSLMaterialBackend
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
-
         glUseProgram(shaderProgram);
 
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
-        // Texture 0 - diffuse texture
-        if (idiffuse.texture is null)
-        {
-            Color4f color = Color4f(idiffuse.asVector4f);
-            idiffuse.texture = makeOnePixelTexture(mat, color);
+        if(mat){
+            auto idiffuse = "diffuse" in mat.inputs;
+
+            // Texture 0 - diffuse texture
+            if (idiffuse.texture is null)
+            {
+                Color4f color = Color4f(idiffuse.asVector4f);
+                idiffuse.texture = makeOnePixelTexture(mat, color);
+            }
+            glActiveTexture(GL_TEXTURE0);
+            idiffuse.texture.bind();
+        }else{
+            glEnablei(GL_BLEND, 0);
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.bind();
         glUniform1i(diffuseTextureLoc, 0);
     }
 

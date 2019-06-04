@@ -70,6 +70,7 @@ import dagon.graphics.materials.sacSun;
 import dagon.graphics.materials.sky;
 import dagon.graphics.materials.hud;
 import dagon.graphics.materials.hud2;
+import dagon.graphics.materials.cooldown;
 import dagon.graphics.materials.colorHUD;
 import dagon.graphics.materials.colorHUD2;
 import dagon.graphics.materials.minimap;
@@ -659,6 +660,7 @@ class Scene: BaseScene
     Entity eLoadingProgressBar;
     HUDMaterialBackend hudMaterialBackend;
     HUDMaterialBackend2 hudMaterialBackend2;
+    CooldownMaterialBackend cooldownMaterialBackend;
     ColorHUDMaterialBackend colorHUDMaterialBackend;
     ColorHUDMaterialBackend2 colorHUDMaterialBackend2;
     MinimapMaterialBackend minimapMaterialBackend;
@@ -692,6 +694,7 @@ class Scene: BaseScene
         eLoadingProgressBar.drawable = loadingProgressBar;
         hudMaterialBackend = New!HUDMaterialBackend(assetManager);
         hudMaterialBackend2 = New!HUDMaterialBackend2(assetManager);
+        cooldownMaterialBackend = New!CooldownMaterialBackend(assetManager);
         colorHUDMaterialBackend = New!ColorHUDMaterialBackend(assetManager);
         colorHUDMaterialBackend2 = New!ColorHUDMaterialBackend2(assetManager);
         minimapMaterialBackend = New!MinimapMaterialBackend(assetManager);

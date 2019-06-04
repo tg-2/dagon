@@ -70,6 +70,7 @@ class HUDMaterialBackend: GLSLMaterialBackend
         #version 330 core
 
         uniform sampler2D diffuseTexture;
+        uniform float alpha;
 
         in vec2 texCoord;
 
@@ -78,6 +79,7 @@ class HUDMaterialBackend: GLSLMaterialBackend
         void main()
         {
             frag_color = texture(diffuseTexture, texCoord);
+            frag_color = vec4(frag_color.rgb, frag_color.a*alpha);
         }
     };
 
@@ -87,6 +89,7 @@ class HUDMaterialBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
     GLint diffuseTextureLoc;
+    GLint alphaLoc;
 
     this(Owner o)
     {
@@ -95,12 +98,13 @@ class HUDMaterialBackend: GLSLMaterialBackend
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
+        alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
     }
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
-    final void setAlpha(float alpha){ }
+    final void setAlpha(float alpha){ glUniform1f(alphaLoc, alpha); }
     final void setInformation(Vector4f information){
         //glUniform4fv(informationLoc, 1, information.arrayof.ptr);
         assert(0,"TODO?");
@@ -118,14 +122,21 @@ class HUDMaterialBackend: GLSLMaterialBackend
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
+        float alpha = 1.0f;
+
         if(mat){
             auto idiffuse = "diffuse" in mat.inputs;
+            auto itransparency = "transparency" in mat.inputs;
 
             // Texture 0 - diffuse texture
             if (idiffuse.texture is null)
             {
                 Color4f color = Color4f(idiffuse.asVector4f);
                 idiffuse.texture = makeOnePixelTexture(mat, color);
+            }
+            if (itransparency)
+            {
+                alpha = itransparency.asFloat;
             }
             glActiveTexture(GL_TEXTURE0);
             idiffuse.texture.bind();
@@ -134,6 +145,7 @@ class HUDMaterialBackend: GLSLMaterialBackend
             glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glUniform1i(diffuseTextureLoc, 0);
+        glUniform1f(alphaLoc, alpha);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)

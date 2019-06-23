@@ -65,6 +65,7 @@ import dagon.graphics.materials.bone;
 import dagon.graphics.materials.terrain2;
 import dagon.graphics.materials.shadeless;
 import dagon.graphics.materials.shadelessBone;
+import dagon.graphics.materials.buildingSummon;
 import dagon.graphics.materials.sacSky;
 import dagon.graphics.materials.sacSun;
 import dagon.graphics.materials.sky;
@@ -361,6 +362,8 @@ class Scene: BaseScene
     TerrainBackend2 terrainMaterialBackend;
     ShadelessBackend shadelessMaterialBackend;
     ShadelessBoneBackend shadelessBoneMaterialBackend;
+    BuildingSummonBackend1 buildingSummonMaterialBackend1;
+    BuildingSummonBackend2 buildingSummonMaterialBackend2;
     SacSkyBackend sacSkyMaterialBackend;
     SacSunBackend sacSunMaterialBackend;
 
@@ -885,6 +888,8 @@ class Scene: BaseScene
         terrainMaterialBackend = New!TerrainBackend2(assetManager);
         shadelessMaterialBackend = New!ShadelessBackend(assetManager);
         shadelessBoneMaterialBackend = New!ShadelessBoneBackend(assetManager);
+        buildingSummonMaterialBackend1 = New!BuildingSummonBackend1(assetManager);
+        buildingSummonMaterialBackend2 = New!BuildingSummonBackend2(assetManager);
         sacSkyMaterialBackend = New!SacSkyBackend(assetManager);
         sacSunMaterialBackend = New!SacSunBackend(assetManager);
         skyMaterialBackend = New!SkyBackend(assetManager);

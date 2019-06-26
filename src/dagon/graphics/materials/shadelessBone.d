@@ -41,6 +41,7 @@ import derelict.opengl;
 
 import dagon.core.ownership;
 import dagon.graphics.rc;
+import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 
@@ -86,6 +87,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         #version 330 core
 
         uniform sampler2D diffuseTexture;
+        uniform vec3 color;
         uniform float alpha;
         uniform float energy;
 
@@ -114,7 +116,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         void main()
         {
             vec4 col = texture(diffuseTexture, texCoord);
-            frag_color = vec4(toLinear(col.rgb) * energy, col.a * alpha);
+            frag_color = vec4(toLinear(col.rgb*color.rgb) * energy, col.a * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
@@ -128,6 +130,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     GLint projectionMatrixLoc;
 
     GLint diffuseTextureLoc;
+    GLint colorLoc;
     GLint alphaLoc;
     GLint energyLoc;
 
@@ -141,6 +144,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
 
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
+        colorLoc = glGetUniformLocation(shaderProgram, "color");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
 
@@ -150,41 +154,66 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
     }
+    final void setColor(Color4f color){
+        glUniform3fv(colorLoc,1,color.arrayof.ptr);
+    }
     final void setAlpha(float alpha){
         glUniform1f(alphaLoc, alpha);
+    }
+    final void setEnergy(float energy){
+        glUniform1f(energyLoc, energy);
     }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
-        auto idiffuse = "diffuse" in mat.inputs;
-        auto ienergy = "energy" in mat.inputs;
-        auto itransparency = "transparency" in mat.inputs;
-
-        float energy = ienergy.asFloat;
-
         glUseProgram(shaderProgram);
 
         // Matrices
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
-
-        // Texture 0 - diffuse texture
-        Color4f color = Color4f(idiffuse.asVector4f);
+        float energy = 8.0f;
         float alpha = 1.0f;
-        if (idiffuse.texture is null)
-        {
-            idiffuse.texture = makeOnePixelTexture(mat, color);
+        Color4f color = Color4f(1.0f,1.0f,1.0f,1.0f);
+        if(mat){
+            auto idiffuse = "diffuse" in mat.inputs;
+            auto ienergy = "energy" in mat.inputs;
+            auto icolor = "color" in mat.inputs;
+            auto itransparency = "transparency" in mat.inputs;
+
+            energy = ienergy.asFloat;
+
+            // Texture 0 - diffuse texture
+            Color4f diffuseColor = Color4f(idiffuse.asVector4f);
+            if (icolor)
+            {
+                color = Color4f(icolor.asVector4f);
+            }
+            if (idiffuse.texture is null)
+            {
+                idiffuse.texture = makeOnePixelTexture(mat, color);
+            }
+            if (itransparency)
+            {
+                alpha = itransparency.asFloat;
+            }
+            glActiveTexture(GL_TEXTURE0);
+            idiffuse.texture.bind();
+        }else{
+            glEnablei(GL_BLEND, 0);
+            glEnablei(GL_BLEND, 1);
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_FALSE);
         }
-        if (itransparency)
-        {
-            alpha = itransparency.asFloat;
-        }
-        glActiveTexture(GL_TEXTURE0);
-        idiffuse.texture.bind();
         glUniform1i(diffuseTextureLoc, 0);
+        glUniform3fv(colorLoc,1,color.arrayof.ptr);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
 

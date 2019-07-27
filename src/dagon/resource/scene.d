@@ -297,13 +297,13 @@ class SceneManager: Owner
 
         BaseScene scene = scenesByName[name];
 
-        writefln("Loading scene \"%s\"", name);
+        //writefln("Loading scene \"%s\"", name);
 
         scene.load();
         currentScene = scene;
         currentScene.start();
 
-        writefln("Running...", name);
+        //writefln("Running...", name);
     }
 
     void update(double dt)

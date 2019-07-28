@@ -246,6 +246,9 @@ class Application: EventListener
                 width=1280;
                 height=720;
                 SDL_SetWindowSize(window,width,height);
+            }else{
+                width=w;
+                height=h;
             }
         }
         super(eventManager, null);

@@ -207,6 +207,13 @@ class Application: EventListener
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+        if (fullscreen && (width==0||height==0)){
+            SDL_DisplayMode dm;
+            SDL_GetCurrentDisplayMode(0,&dm);
+            width=dm.w;
+            height=dm.h;
+        }
+
         window = SDL_CreateWindow(toStringz(windowTitle),
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (window is null)
@@ -231,12 +238,15 @@ class Application: EventListener
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
         EventManager eventManager = new EventManager(window, width, height);
-        eventManager.update();
-        SDL_GetWindowSize(window,cast(int*)&width,cast(int*)&height);
-        if(width==1&&height==1){
-            width=1280;
-            height=720;
-            SDL_SetWindowSize(window,width,height);
+        if(width==0||height==0){
+            eventManager.update();
+            int w,h;
+            SDL_GetWindowSize(window,cast(int*)&w,cast(int*)&h);
+            if(w==1&&h==1){
+                width=1280;
+                height=720;
+                SDL_SetWindowSize(window,width,height);
+            }
         }
         super(eventManager, null);
 

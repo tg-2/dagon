@@ -677,9 +677,13 @@ class Scene: BaseScene
     float aspectDistortion;
 
     this(int width, int height, float screenScaling, float aspectDistortion, SceneManager smngr)
+    in
+    {
+        assert(width&&height);
+    }
+    do
     {
         super(smngr);
-
         this.width=width;
         this.height=height;
         this.screenScaling=screenScaling;
@@ -874,11 +878,6 @@ class Scene: BaseScene
     int shadowMapResolution=8192;
     override void onAllocate()
     {
-        if(width==0||height==0){
-            eventManager.update();
-            width=eventManager.windowWidth;
-            height=eventManager.windowHeight;
-        }
         environment = New!Environment(assetManager);
 
         lightManager = New!LightManager(200.0f, 100, assetManager);

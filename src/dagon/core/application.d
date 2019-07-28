@@ -231,6 +231,13 @@ class Application: EventListener
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
         EventManager eventManager = new EventManager(window, width, height);
+        eventManager.update();
+        SDL_GetWindowSize(window,cast(int*)&width,cast(int*)&height);
+        if(width==1&&height==1){
+            width=1280;
+            height=720;
+            SDL_SetWindowSize(window,width,height);
+        }
         super(eventManager, null);
 
         // Initialize OpenGL

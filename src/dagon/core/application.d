@@ -215,7 +215,7 @@ class Application: EventListener
         }
 
         window = SDL_CreateWindow(toStringz(windowTitle),
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width?width:1, height?height:1, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (window is null)
             exitWithError("Failed to create window: " ~ to!string(SDL_GetError()));
 
@@ -242,7 +242,7 @@ class Application: EventListener
             eventManager.update();
             int w,h;
             SDL_GetWindowSize(window,cast(int*)&w,cast(int*)&h);
-            if(w==1&&h==1){
+            if(w<=1&&h<=1){
                 width=1280;
                 height=720;
                 SDL_SetWindowSize(window,width,height);

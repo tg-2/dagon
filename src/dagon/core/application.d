@@ -282,14 +282,16 @@ class Application: EventListener
         // Override me
     }
 
+    bool reportedGLError = false;
     void checkGLError()
     {
+        if (reportedGLError) return;
         GLenum error = GL_NO_ERROR;
         error = glGetError();
         if (error != GL_NO_ERROR)
         {
             writeln("OpenGL error: ", error);
-            eventManager.running = false;
+            reportedGLError = true;
         }
     }
 

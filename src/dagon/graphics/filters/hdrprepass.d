@@ -94,7 +94,7 @@ class PostFilterHDRPrepass: PostFilter
                 lum = (clamp(lum, minGlowLuminance, maxGlowLuminance) - minGlowLuminance) / (maxGlowLuminance - minGlowLuminance);
                 res += glow * lum * glowBrightness;
             }
-
+            res = max(res, 0.0);
             frag_color = vec4(res, 1.0); 
         }
     ";

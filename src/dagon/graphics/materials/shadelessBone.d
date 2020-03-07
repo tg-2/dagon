@@ -91,6 +91,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         uniform float alpha;
         uniform float energy;
 
+        uniform vec4 information;
+
         in vec3 eyePosition;
         in vec2 texCoord;
 
@@ -98,6 +100,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         layout(location = 2) out vec4 frag_position;
         layout(location = 4) out vec4 frag_velocity;
         layout(location = 5) out vec4 frag_luma;
+        layout(location = 6) out vec4 frag_information;
 
         float luminance(vec3 color)
         {
@@ -120,6 +123,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
+            frag_information = information;
         }
     ";
 

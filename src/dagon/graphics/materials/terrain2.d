@@ -103,6 +103,7 @@ class TerrainBackend2: GLSLMaterialBackend
         uniform sampler2D rmsTexture;
         uniform sampler2D emissionTexture;
         uniform float emissionEnergy;
+        uniform float detailFactor;
 
         uniform int parallaxMethod;
         uniform float parallaxScale;
@@ -161,7 +162,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
             // Parallax mapping
             const float heightFactor = 4;
-            float detail = max(0.0,1.0-2e-4*dot(eyePosition,eyePosition));
+            float detail = max(0.0,1.0-detailFactor*dot(eyePosition,eyePosition));
             float height = heightFactor*(1-texture(detailTexture, texCoord).x*detail);
             height = height * parallaxScale + parallaxBias;
             vec2 shiftedTexCoord = texCoord;// + (height * tE.xy);
@@ -192,8 +193,9 @@ class TerrainBackend2: GLSLMaterialBackend
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
             vec4 detailColor = texture(detailTexture, shiftedTexCoord);
+            vec4 detailAverage = textureLod(detailTexture, shiftedTexCoord, 8);
             vec4 colorColor = texture(colorTexture, coord);
-            vec4 totalColor = (0.5*diffuseColor*(2.0-detail+detail*detailColor))*colorColor;
+            vec4 totalColor = 0.5*diffuseColor*(1.0+detailColor)*colorColor;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
 
@@ -228,6 +230,7 @@ class TerrainBackend2: GLSLMaterialBackend
     GLint rmsTextureLoc;
     GLint emissionTextureLoc;
     GLint emissionEnergyLoc;
+	GLint detailFactorLoc;
 
     GLint parallaxMethodLoc;
     GLint parallaxScaleLoc;
@@ -255,6 +258,7 @@ class TerrainBackend2: GLSLMaterialBackend
         rmsTextureLoc = glGetUniformLocation(shaderProgram, "rmsTexture");
         emissionTextureLoc = glGetUniformLocation(shaderProgram, "emissionTexture");
         emissionEnergyLoc = glGetUniformLocation(shaderProgram, "emissionEnergy");
+        detailFactorLoc = glGetUniformLocation(shaderProgram, "detailFactor");
 
         parallaxMethodLoc = glGetUniformLocation(shaderProgram, "parallaxMethod");
         parallaxScaleLoc = glGetUniformLocation(shaderProgram, "parallaxScale");
@@ -305,6 +309,7 @@ class TerrainBackend2: GLSLMaterialBackend
         auto iroughness = "roughness" in mat.inputs;
         auto imetallic = "metallic" in mat.inputs;
         auto iEnergy = "energy" in mat.inputs;
+        auto iDetailFactor = "detailFactor" in mat.inputs;
 
         int parallaxMethod = intProp(mat, "parallax");
         if (parallaxMethod > ParallaxOcclusionMapping)
@@ -370,6 +375,9 @@ class TerrainBackend2: GLSLMaterialBackend
         ipbr.texture.bind();
 
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
+        float detailFactor=1.5e-4f;
+        if(iDetailFactor) detailFactor=iDetailFactor.asFloat;
+        glUniform1f(detailFactorLoc, detailFactor);
 
         glActiveTexture(GL_TEXTURE0);
     }

@@ -161,7 +161,8 @@ class TerrainBackend2: GLSLMaterialBackend
 
             // Parallax mapping
             const float heightFactor = 4;
-            float height = heightFactor*(1-texture(detailTexture, texCoord).x);
+            float detail = max(0.0,1.0-2e-4*dot(eyePosition,eyePosition));
+            float height = heightFactor*(1-texture(detailTexture, texCoord).x*detail);
             height = height * parallaxScale + parallaxBias;
             vec2 shiftedTexCoord = texCoord;// + (height * tE.xy);
             /*float height = 0.0;
@@ -178,10 +179,10 @@ class TerrainBackend2: GLSLMaterialBackend
             const vec2 size = vec2(2.0,0.0);
             const ivec3 off = ivec3(-1,0,1);
             float s11 = height;
-            float s01 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.xy).x);
-            float s21 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.zy).x);
-            float s10 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yx).x);
-            float s12 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yz).x);
+            float s01 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.xy).x*detail);
+            float s21 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.zy).x*detail);
+            float s10 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yx).x*detail);
+            float s12 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yz).x*detail);
             vec3 va = normalize(vec3(size.xy,s21-s01));
             vec3 vb = normalize(vec3(size.yx,s12-s10));
             vec4 bump = vec4( cross(va,vb),s11);
@@ -192,7 +193,7 @@ class TerrainBackend2: GLSLMaterialBackend
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
             vec4 detailColor = texture(detailTexture, shiftedTexCoord);
             vec4 colorColor = texture(colorTexture, coord);
-            vec4 totalColor = (0.5*diffuseColor+0.5*diffuseColor*detailColor)*colorColor;
+            vec4 totalColor = (0.5*diffuseColor*(2.0-detail+detail*detailColor))*colorColor;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
 

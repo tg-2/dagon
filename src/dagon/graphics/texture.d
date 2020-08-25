@@ -34,6 +34,7 @@ import derelict.opengl;
 
 import dlib.core.memory;
 import dlib.image.image;
+import dlib.image.hdri;
 import dlib.math.vector;
 
 import dagon.core.ownership;
@@ -89,7 +90,7 @@ class Texture: Owner
             case PixelFormat.LA8:        intFormat = GL_RG8;     format = GL_RG;   type = GL_UNSIGNED_BYTE; break;
             case PixelFormat.RGB8:       intFormat = GL_RGB8;    format = GL_RGB;  type = GL_UNSIGNED_BYTE; break;
             case PixelFormat.RGBA8:      intFormat = GL_RGBA8;   format = GL_RGBA; type = GL_UNSIGNED_BYTE; break;
-            case PixelFormat.RGBA_FLOAT: intFormat = GL_RGBA32F; format = GL_RGBA; type = GL_FLOAT; break;
+            case FloatPixelFormat.RGBAF32: intFormat = GL_RGBA32F; format = GL_RGBA; type = GL_FLOAT; break;
             default:
                 writefln("Unsupported pixel format %s", img.pixelFormat);
                 return;

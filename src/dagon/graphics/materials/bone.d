@@ -104,6 +104,8 @@ class BoneBackend: GLSLMaterialBackend
         uniform sampler2D emissionTexture;
         uniform float emissionEnergy;
 
+        uniform bool petrified;
+
         uniform int parallaxMethod;
         uniform float parallaxScale;
         uniform float parallaxBias;
@@ -180,6 +182,12 @@ class BoneBackend: GLSLMaterialBackend
 
             float geomMask = float(layer > 0);
 
+            if (petrified) {
+                float brightness = 1/3.0f * (diffuseColor.r+diffuseColor.g+diffuseColor.b);
+                diffuseColor = 0.3f+0.7f*brightness*vec4(1.0,1.0,0.8,1.0);
+                rms = vec4(0.5, 0.5, 1.0, 1.0);
+            }
+
             frag_color = vec4(diffuseColor.rgb, geomMask);
             frag_rms = vec4(rms.r, rms.g, 1.0, 1.0);
             frag_position = vec4(eyePosition, geomMask);
@@ -208,6 +216,8 @@ class BoneBackend: GLSLMaterialBackend
     GLint emissionTextureLoc;
     GLint emissionEnergyLoc;
 
+    GLint petrifiedLoc;
+
     GLint parallaxMethodLoc;
     GLint parallaxScaleLoc;
     GLint parallaxBiasLoc;
@@ -235,6 +245,8 @@ class BoneBackend: GLSLMaterialBackend
         emissionTextureLoc = glGetUniformLocation(shaderProgram, "emissionTexture");
         emissionEnergyLoc = glGetUniformLocation(shaderProgram, "emissionEnergy");
 
+        petrifiedLoc = glGetUniformLocation(shaderProgram, "petrified");
+
         parallaxMethodLoc = glGetUniformLocation(shaderProgram, "parallaxMethod");
         parallaxScaleLoc = glGetUniformLocation(shaderProgram, "parallaxScale");
         parallaxBiasLoc = glGetUniformLocation(shaderProgram, "parallaxBias");
@@ -252,6 +264,9 @@ class BoneBackend: GLSLMaterialBackend
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
+    final void setPetrified(bool petrified){
+        glUniform1i(petrifiedLoc, petrified);
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {
@@ -263,6 +278,7 @@ class BoneBackend: GLSLMaterialBackend
         auto imetallic = "metallic" in mat.inputs;
         auto iemission = "emission" in mat.inputs;
         auto iEnergy = "energy" in mat.inputs;
+        auto iPetrified = "petrified" in mat.inputs;
 
         int parallaxMethod = intProp(mat, "parallax");
         if (parallaxMethod > ParallaxOcclusionMapping)
@@ -348,6 +364,7 @@ class BoneBackend: GLSLMaterialBackend
         iemission.texture.bind();
         glUniform1i(emissionTextureLoc, 3);
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
+        glUniform1i(petrifiedLoc, iPetrified?iPetrified.asBool:false);
 
         glActiveTexture(GL_TEXTURE0);
     }

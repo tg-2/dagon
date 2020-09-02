@@ -91,8 +91,13 @@ public
     import dagon.graphics.deferred;
     
     import dagon.graphics.materials.generic;
+    import dagon.graphics.materials.bone;
     import dagon.graphics.materials.shadeless;
+    import dagon.graphics.materials.shadelessBone;
+    import dagon.graphics.materials.buildingSummon;
     import dagon.graphics.materials.sky;
+    import dagon.graphics.materials.sacSky;
+    import dagon.graphics.materials.sacSun;
     import dagon.graphics.materials.hud;
     import dagon.graphics.materials.hud2;
     import dagon.graphics.materials.colorHUD;

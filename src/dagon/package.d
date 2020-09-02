@@ -103,6 +103,7 @@ public
     import dagon.graphics.materials.colorHUD;
     import dagon.graphics.materials.colorHUD2;
     import dagon.graphics.materials.minimap;
+    import dagon.graphics.materials.cooldown;
     import dagon.graphics.materials.terrain2;
     import dagon.graphics.materials.particle;
     

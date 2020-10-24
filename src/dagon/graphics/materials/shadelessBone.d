@@ -91,6 +91,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         uniform float alpha;
         uniform float energy;
 
+        uniform bool petrified;
+
         uniform vec4 information;
 
         in vec3 eyePosition;
@@ -119,6 +121,10 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         void main()
         {
             vec4 col = texture(diffuseTexture, texCoord);
+            if (petrified) {
+                float brightness = 1/3.0f * (col.r+col.g+col.b);
+                col = 0.3f+0.7f*brightness*vec4(1.0,1.0,0.8,1.0);
+            }
             frag_color = vec4(toLinear(col.rgb*color.rgb) * energy, col.a * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
@@ -138,6 +144,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     GLint alphaLoc;
     GLint energyLoc;
 
+    GLint petrifiedLoc;
+
     GLint informationLoc;
 
     this(Owner o)
@@ -151,6 +159,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         colorLoc = glGetUniformLocation(shaderProgram, "color");
         alphaLoc = glGetUniformLocation(shaderProgram, "alpha");
         energyLoc = glGetUniformLocation(shaderProgram, "energy");
+
+        petrifiedLoc = glGetUniformLocation(shaderProgram, "petrified");
 
         informationLoc = glGetUniformLocation(shaderProgram, "information");
     }
@@ -170,6 +180,9 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
     }
+    final void setPetrified(bool petrified){
+        glUniform1i(petrifiedLoc, petrified);
+    }
     final void bindDiffuse(Texture diffuse){
         glActiveTexture(GL_TEXTURE0);
         diffuse.bind();
@@ -185,11 +198,13 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         float energy = 8.0f;
         float alpha = 1.0f;
         Color4f color = Color4f(1.0f,1.0f,1.0f,1.0f);
+        bool petrified = false;
         if(mat){
             auto idiffuse = "diffuse" in mat.inputs;
             auto ienergy = "energy" in mat.inputs;
             auto icolor = "color" in mat.inputs;
             auto itransparency = "transparency" in mat.inputs;
+            auto iPetrified = "petrified" in mat.inputs;
 
             energy = ienergy.asFloat;
 
@@ -207,6 +222,10 @@ class ShadelessBoneBackend: GLSLMaterialBackend
             {
                 alpha = itransparency.asFloat;
             }
+            if (iPetrified)
+            {
+                petrified = iPetrified.asBool;
+            }
             glActiveTexture(GL_TEXTURE0);
             idiffuse.texture.bind();
         }else{
@@ -220,6 +239,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         glUniform3fv(colorLoc,1,color.arrayof.ptr);
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
+        glUniform1i(petrifiedLoc, petrified);
 
         glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
     }

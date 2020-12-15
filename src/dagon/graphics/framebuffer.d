@@ -177,7 +177,7 @@ class Framebuffer: Owner
 
         glBindVertexArray(0);
         
-        maxMipmap = cast(int)log2(fmax(width, height));
+        maxMipmap = cast(int)log2(fmax(cast(float)width, cast(float)height));
     }
     
     int maxMipmap;

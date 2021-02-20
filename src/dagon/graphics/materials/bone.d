@@ -1,4 +1,4 @@
-/*
+ /*
 Copyright (c) 2018 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -37,6 +37,7 @@ import dlib.image.color;
 import derelict.opengl;
 import dagon.core.ownership;
 import dagon.graphics.rc;
+import dagon.graphics.texture;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
 import dagon.resource.scene;
@@ -266,6 +267,10 @@ class BoneBackend: GLSLMaterialBackend
     }
     final void setPetrified(bool petrified){
         glUniform1i(petrifiedLoc, petrified);
+    }
+    final void bindDiffuse(Texture diffuse){
+        glActiveTexture(GL_TEXTURE0);
+        diffuse.bind();
     }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)

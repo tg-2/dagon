@@ -102,7 +102,7 @@ bool segmentIsec(
 }
 
 T distancesqr2(T) (Vector!(T,2) a, Vector!(T,2) b)
-body
+do
 {
     T dx = a.x - b.x;
     T dy = a.y - b.y;

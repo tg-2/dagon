@@ -214,6 +214,8 @@ class BoneShadowBackend: GLSLMaterialBackend
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
+        uniform float bulk = 1.0f;
+
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
         layout (location = 2) in vec3 va_Vertex2;
@@ -227,9 +229,9 @@ class BoneShadowBackend: GLSLMaterialBackend
         void main()
         {
             texCoord = va_Texcoord;
-            vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
-                           + pose[va_BoneIndices.y] * vec4(va_Vertex1, 1.0) * va_Weights.y
-                           + pose[va_BoneIndices.z] * vec4(va_Vertex2, 1.0) * va_Weights.z;
+            vec4 newVertex = pose[va_BoneIndices.x] * vec4(bulk*va_Vertex0, 1.0) * va_Weights.x
+                           + pose[va_BoneIndices.y] * vec4(bulk*va_Vertex1, 1.0) * va_Weights.y
+                           + pose[va_BoneIndices.z] * vec4(bulk*va_Vertex2, 1.0) * va_Weights.z;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(newVertex.xyz, 1.0);
         }
     ";
@@ -257,6 +259,8 @@ class BoneShadowBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
 
+    GLint bulkLoc;
+
     GLint diffuseTextureLoc;
 
     this(Owner o)
@@ -265,6 +269,7 @@ class BoneShadowBackend: GLSLMaterialBackend
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+        bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
     }
 
@@ -273,6 +278,9 @@ class BoneShadowBackend: GLSLMaterialBackend
     }
     final void setAlpha(float alpha){ }
     final void setInformation(Vector4f information){ }
+    final void setBulk(float bulk){
+        glUniform1f(bulkLoc, bulk);
+    }
 
     override void bind(GenericMaterial mat, RenderingContext* rc)
     {

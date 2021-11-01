@@ -68,13 +68,13 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
-        uniform mat4 invViewMatrix;
+        uniform float bulk = 1.0f;
 
         void main()
         {
-            vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
-                           + pose[va_BoneIndices.y] * vec4(va_Vertex1, 1.0) * va_Weights.y
-                           + pose[va_BoneIndices.z] * vec4(va_Vertex2, 1.0) * va_Weights.z;
+            vec4 newVertex = pose[va_BoneIndices.x] * vec4(bulk*va_Vertex0, 1.0) * va_Weights.x
+                           + pose[va_BoneIndices.y] * vec4(bulk*va_Vertex1, 1.0) * va_Weights.y
+                           + pose[va_BoneIndices.z] * vec4(bulk*va_Vertex2, 1.0) * va_Weights.z;
             vec4 pos = modelViewMatrix * vec4(newVertex.xyz, 1.0);
             eyePosition = pos.xyz;
 
@@ -139,6 +139,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
 
+    GLint bulkLoc;
+
     GLint diffuseTextureLoc;
     GLint colorLoc;
     GLint alphaLoc;
@@ -154,6 +156,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
 
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+
+        bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
 
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         colorLoc = glGetUniformLocation(shaderProgram, "color");
@@ -179,6 +183,9 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
+    final void setBulk(float bulk){
+        glUniform1f(bulkLoc, bulk);
     }
     final void setPetrified(bool petrified){
         glUniform1i(petrifiedLoc, petrified);

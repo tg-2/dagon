@@ -55,6 +55,8 @@ class BoneBackend: GLSLMaterialBackend
         uniform mat4 prevModelViewProjMatrix;
         uniform mat4 blurModelViewProjMatrix;
 
+        uniform float bulk = 1.0f;
+
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
         layout (location = 2) in vec3 va_Vertex2;
@@ -78,9 +80,9 @@ class BoneBackend: GLSLMaterialBackend
                            +  pose[va_BoneIndices.y] * va_Weights.y
                            +  pose[va_BoneIndices.z] * va_Weights.z) * vec4(va_Normal, 0.0);
             eyeNormal = (normalMatrix * newNormal).xyz;
-            vec4 newVertex = pose[va_BoneIndices.x] * vec4(va_Vertex0, 1.0) * va_Weights.x
-                           + pose[va_BoneIndices.y] * vec4(va_Vertex1, 1.0) * va_Weights.y
-                           + pose[va_BoneIndices.z] * vec4(va_Vertex2, 1.0) * va_Weights.z;
+            vec4 newVertex = pose[va_BoneIndices.x] * vec4(bulk*va_Vertex0, 1.0) * va_Weights.x
+                           + pose[va_BoneIndices.y] * vec4(bulk*va_Vertex1, 1.0) * va_Weights.y
+                           + pose[va_BoneIndices.z] * vec4(bulk*va_Vertex2, 1.0) * va_Weights.z;
             vec4 pos = modelViewMatrix * vec4(newVertex.xyz, 1.0);
             eyePosition = pos.xyz;
 
@@ -211,6 +213,8 @@ class BoneBackend: GLSLMaterialBackend
     GLint prevModelViewProjMatrixLoc;
     GLint blurModelViewProjMatrixLoc;
 
+    GLint bulkLoc;
+
     GLint diffuseTextureLoc;
     GLint normalTextureLoc;
     GLint rmsTextureLoc;
@@ -236,6 +240,8 @@ class BoneBackend: GLSLMaterialBackend
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         normalMatrixLoc = glGetUniformLocation(shaderProgram, "normalMatrix");
+
+        bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
 
         prevModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "prevModelViewProjMatrix");
         blurModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "blurModelViewProjMatrix");
@@ -264,6 +270,9 @@ class BoneBackend: GLSLMaterialBackend
     final void setAlpha(float alpha){ }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
+    final void setBulk(float bulk){
+        glUniform1f(bulkLoc, bulk);
     }
     final void setPetrified(bool petrified){
         glUniform1i(petrifiedLoc, petrified);

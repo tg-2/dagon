@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2017-2018 Timur Gafarov
 
@@ -261,12 +262,13 @@ class TerrainBackend2: GLSLMaterialBackend
         };
         string fsText = q{
             #version 330 core
-            uniform float time = 0.0f;
+            uniform float time;
             in vec2 position;
             layout (location = 0) out float displacement;
 
             void main(){
-                displacement = 256.0f*max(0.0f, 1.0f-length(position));
+                vec2 pos = (0.5f*(position+1.0f)*256.0f-0.5f)*10.0f;
+                displacement = 2.5f*(sin(0.1f*pos.x+time)+sin(0.1f*pos.y+time));
             }
         };
         override string vertexShaderSrc(){ return vsText; }
@@ -352,21 +354,27 @@ class TerrainBackend2: GLSLMaterialBackend
         glBindFramebuffer(GL_FRAMEBUFFER, displacementFramebuffer);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
+        glDepthMask(0);
+        glDisable(GL_DEPTH_TEST);
         glViewport(0,0,256,256);
+        glScissor(0,0,256,256);
         glClearColor(0.0f,0.0f,0.0f,0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(displacementVao);
     }
 
-    final void drawTestDisplacement(){
+    final void drawTestDisplacement(float time){
         displacementTest.bind(null,null);
+        glUniform1f(displacementTest.timeLoc,time);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         displacementTest.unbind(null,null);
     }
     final void unbindDisplacement(){
-	    glBindVertexArray(0);
-	    glDisable(GL_BLEND);
-	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindVertexArray(0);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(1);
+        glDisable(GL_BLEND);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     final void bindColor(Texture color){

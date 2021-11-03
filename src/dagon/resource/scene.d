@@ -1164,8 +1164,8 @@ class Scene: BaseScene
 
     void startGBufferInformationDownload(){ }
 
-    final void testDisplacement(){
-        terrainMaterialBackend.drawTestDisplacement();
+    final void testDisplacement(float time){
+        terrainMaterialBackend.drawTestDisplacement(time);
     }
 
     abstract bool needTerrainDisplacement();

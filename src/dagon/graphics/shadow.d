@@ -53,6 +53,7 @@ import dagon.graphics.rc;
 import dagon.graphics.environment;
 import dagon.graphics.material;
 import dagon.graphics.materials.generic;
+import dagon.graphics.materials.terrain2;
 import dagon.resource.scene;
 
 class ShadowArea: Owner
@@ -314,6 +315,92 @@ class BoneShadowBackend: GLSLMaterialBackend
     }
 }
 
+class TerrainShadowBackend: GLSLMaterialBackend
+{
+    string vsText =
+    "
+        #version 330 core
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+
+        uniform sampler2D displacementTexture;
+
+        layout (location = 0) in vec3 va_Vertex;
+        layout (location = 1) in vec3 va_Normal;
+        layout (location = 2) in vec2 va_Texcoord;
+        layout (location = 3) in vec2 va_Coord;
+
+        void main()
+        {
+            float displacement = texture(displacementTexture,va_Coord).r;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(va_Vertex+vec3(0.0f,0.0f,displacement), 1.0);
+        }
+    ";
+
+    string fsText =
+    "
+        #version 330 core
+
+        out vec4 frag_color;
+
+        void main()
+        {
+            frag_color = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    ";
+
+    override string vertexShaderSrc() {return vsText;}
+    override string fragmentShaderSrc() {return fsText;}
+
+    GLint modelViewMatrixLoc;
+    GLint projectionMatrixLoc;
+
+    GLint diffuseTextureLoc;
+
+    GLint displacementTextureLoc;
+    GLint displacementTexture;
+
+    this(Owner o, TerrainBackend2 terrainBackend)
+    {
+        super(o);
+
+        modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
+        projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+
+        displacementTextureLoc = glGetUniformLocation(shaderProgram, "displacementTexture");
+        displacementTexture = terrainBackend.displacementTexture;
+    }
+
+
+    final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+    }
+    final void setAlpha(float alpha){ }
+    final void setInformation(Vector4f information){ }
+
+    override void bind(GenericMaterial mat, RenderingContext* rc)
+    {
+        //glDisable(GL_CULL_FACE);
+        glUseProgram(shaderProgram);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, displacementTexture);
+        glUniform1i(displacementTextureLoc, 0);
+
+        glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, rc.modelViewMatrix.arrayof.ptr);
+        glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
+    }
+
+    override void unbind(GenericMaterial mat, RenderingContext* rc)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glUseProgram(0);
+    }
+}
+
 
 class CascadedShadowMap: Owner
 {
@@ -328,6 +415,7 @@ class CascadedShadowMap: Owner
     GenericMaterial sm;
     BoneShadowBackend bsb;
     GenericMaterial bsm;
+    TerrainShadowBackend tsb;
 
     float[3] projSize = [5.0f,15.0f,400.0f];
 
@@ -357,6 +445,8 @@ class CascadedShadowMap: Owner
 
         this.bsb = New!BoneShadowBackend(this);
         this.bsm = New!GenericMaterial(bsb, this);
+
+        this.tsb = New!TerrainShadowBackend(this,scene.terrainMaterialBackend);
 
         glGenTextures(1, &depthTexture);
         glActiveTexture(GL_TEXTURE0);

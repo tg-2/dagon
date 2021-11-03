@@ -80,8 +80,8 @@ class TerrainBackend2: GLSLMaterialBackend
             texCoord = va_Texcoord;
             coord = va_Coord;
             eyeNormal = (normalMatrix * vec4(va_Normal, 0.0)).xyz;
-            vec4 pos = modelViewMatrix * vec4(va_Vertex, 1.0);
-            pos.z += texture(displacementTexture,coord).r;
+            float displacement = texture(displacementTexture,coord).r;
+            vec4 pos = modelViewMatrix * vec4(va_Vertex+vec3(0.0f,0.0f,displacement), 1.0);
             eyePosition = pos.xyz;
 
             vec4 position = projectionMatrix * pos;
@@ -245,6 +245,42 @@ class TerrainBackend2: GLSLMaterialBackend
 
     GLuint displacementFramebuffer;
     GLuint displacementTexture;
+    GLuint displacementVao;
+    GLuint displacementVbo;
+
+    static class DisplacementTestBackend: GLSLMaterialBackend
+    {
+        string vsText = q{
+            #version 330 core
+            layout (location = 0) in vec2 va_Vertex;
+            out vec2 position;
+            void main(){
+                position = va_Vertex;
+                gl_Position = vec4(position,0.0f,1.0f);
+            }
+        };
+        string fsText = q{
+            #version 330 core
+            uniform float time = 0.0f;
+            in vec2 position;
+            layout (location = 0) out float displacement;
+
+            void main(){
+                displacement = 256.0f*max(0.0f, 1.0f-length(position));
+            }
+        };
+        override string vertexShaderSrc(){ return vsText; }
+        override string fragmentShaderSrc(){ return fsText; }
+
+        GLint timeLoc;
+
+        this(Owner o){
+            super(o);
+            timeLoc = glGetUniformLocation(shaderProgram, "time");
+        }
+    }
+    DisplacementTestBackend displacementTest;
+
 
     this(Owner o)
     {
@@ -289,6 +325,48 @@ class TerrainBackend2: GLSLMaterialBackend
         GLenum status=glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status!=GL_FRAMEBUFFER_COMPLETE)
             writeln(status);
+
+        static immutable GLfloat[] g_quad_vertex_buffer_data = [
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f, 1.0f,
+            -1.0f, 1.0f,
+            1.0f, -1.0f,
+            1.0f,  1.0f,
+        ];
+
+        glGenBuffers(1, &displacementVbo);
+        glBindBuffer(GL_ARRAY_BUFFER, displacementVbo);
+        glBufferData(GL_ARRAY_BUFFER, float.sizeof*g_quad_vertex_buffer_data.length, g_quad_vertex_buffer_data.ptr, GL_STATIC_DRAW);
+
+        glGenVertexArrays(1, &displacementVao);
+        glBindVertexArray(displacementVao);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, displacementVbo);
+        glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,cast(void*)0);
+
+        displacementTest = New!DisplacementTestBackend(this);
+    }
+
+    final void bindDisplacement(){
+        glBindFramebuffer(GL_FRAMEBUFFER, displacementFramebuffer);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glViewport(0,0,256,256);
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glBindVertexArray(displacementVao);
+    }
+
+    final void drawTestDisplacement(){
+        displacementTest.bind(null,null);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        displacementTest.unbind(null,null);
+    }
+    final void unbindDisplacement(){
+	    glBindVertexArray(0);
+	    glDisable(GL_BLEND);
+	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     final void bindColor(Texture color){

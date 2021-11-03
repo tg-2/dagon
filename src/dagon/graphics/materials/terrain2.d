@@ -60,6 +60,8 @@ class TerrainBackend2: GLSLMaterialBackend
         uniform mat4 prevModelViewProjMatrix;
         uniform mat4 blurModelViewProjMatrix;
 
+        uniform sampler2D displacementTexture;
+
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 1) in vec3 va_Normal;
         layout (location = 2) in vec2 va_Texcoord;
@@ -79,6 +81,7 @@ class TerrainBackend2: GLSLMaterialBackend
             coord = va_Coord;
             eyeNormal = (normalMatrix * vec4(va_Normal, 0.0)).xyz;
             vec4 pos = modelViewMatrix * vec4(va_Vertex, 1.0);
+            pos.z += texture(displacementTexture,coord).r;
             eyePosition = pos.xyz;
 
             vec4 position = projectionMatrix * pos;
@@ -230,13 +233,18 @@ class TerrainBackend2: GLSLMaterialBackend
     GLint rmsTextureLoc;
     GLint emissionTextureLoc;
     GLint emissionEnergyLoc;
-	GLint detailFactorLoc;
+    GLint detailFactorLoc;
 
     GLint parallaxMethodLoc;
     GLint parallaxScaleLoc;
     GLint parallaxBiasLoc;
 
     GLint blurMaskLoc;
+
+    GLint displacementTextureLoc;
+
+    GLuint displacementFramebuffer;
+    GLuint displacementTexture;
 
     this(Owner o)
     {
@@ -265,6 +273,22 @@ class TerrainBackend2: GLSLMaterialBackend
         parallaxBiasLoc = glGetUniformLocation(shaderProgram, "parallaxBias");
 
         blurMaskLoc = glGetUniformLocation(shaderProgram, "blurMask");
+
+        displacementTextureLoc = glGetUniformLocation(shaderProgram, "displacementTexture");
+
+        glGenFramebuffers(1, &displacementFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, displacementFramebuffer);
+        glGenTextures(1, &displacementTexture);
+        glBindTexture(GL_TEXTURE_2D, displacementTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, displacementTexture, 0);
+        GLenum[1] drawBuffers = [GL_COLOR_ATTACHMENT0];
+        glDrawBuffers(1, drawBuffers.ptr);
+        GLenum status=glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if(status!=GL_FRAMEBUFFER_COMPLETE)
+            writeln(status);
     }
 
     final void bindColor(Texture color){
@@ -310,6 +334,7 @@ class TerrainBackend2: GLSLMaterialBackend
         auto imetallic = "metallic" in mat.inputs;
         auto iEnergy = "energy" in mat.inputs;
         auto iDetailFactor = "detailFactor" in mat.inputs;
+        auto iDisplacement = "displacement" in mat.inputs;
 
         int parallaxMethod = intProp(mat, "parallax");
         if (parallaxMethod > ParallaxOcclusionMapping)
@@ -374,6 +399,10 @@ class TerrainBackend2: GLSLMaterialBackend
         glUniform1i(rmsTextureLoc, 2);
         ipbr.texture.bind();
 
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, displacementTexture);
+        glUniform1i(displacementTextureLoc, 6);
+
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
         float detailFactor=1.5e-4f;
         if(iDetailFactor) detailFactor=iDetailFactor.asFloat;
@@ -389,6 +418,9 @@ class TerrainBackend2: GLSLMaterialBackend
 
         glActiveTexture(GL_TEXTURE2);
         ipbr.texture.unbind();
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         glActiveTexture(GL_TEXTURE0);
 

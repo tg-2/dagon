@@ -1164,6 +1164,21 @@ class Scene: BaseScene
 
     void startGBufferInformationDownload(){ }
 
+    final void testDisplacement(){
+        terrainMaterialBackend.drawTestDisplacement();
+    }
+
+    abstract bool needTerrainDisplacement();
+    abstract void displaceTerrain();
+
+    final void renderTerrainDisplacement(){
+        if(needTerrainDisplacement()){
+            terrainMaterialBackend.bindDisplacement();
+            displaceTerrain();
+            terrainMaterialBackend.unbindDisplacement();
+        }
+    }
+
     override void onRender()
     {
         static if(gbuffers.length!=1){
@@ -1173,6 +1188,7 @@ class Scene: BaseScene
                 deferredLightPass.gbuffer=gbuffer;
             }
         }
+        renderTerrainDisplacement();
         renderShadows(&rc3d);
         gbuffer.render(&rc3d);
         sceneFramebuffer.bind();

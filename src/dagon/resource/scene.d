@@ -1164,9 +1164,13 @@ class Scene: BaseScene
 
     void startGBufferInformationDownload(){ }
 
-    final void testDisplacement(float time){
-        terrainMaterialBackend.drawTestDisplacement(time);
-    }
+    final void bindTestDisplacement(){ terrainMaterialBackend.bindTestDisplacement(); }
+    final void testDisplacement(float time){ terrainMaterialBackend.drawTestDisplacement(time); }
+    final void unbindTestDisplacement(){ terrainMaterialBackend.unbindTestDisplacement(); }
+
+    final void bindEruptDisplacement(){ terrainMaterialBackend.bindEruptDisplacement(); }
+    final void eruptDisplacement(float x,float y,float time){ terrainMaterialBackend.drawEruptDisplacement(x,y,time); }
+    final void unbindEruptDisplacement(){ terrainMaterialBackend.unbindTestDisplacement(); }
 
     abstract bool needTerrainDisplacement();
     abstract void displaceTerrain();

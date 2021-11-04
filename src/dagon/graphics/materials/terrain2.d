@@ -249,8 +249,7 @@ class TerrainBackend2: GLSLMaterialBackend
     GLuint displacementVao;
     GLuint displacementVbo;
 
-    static class DisplacementTestBackend: GLSLMaterialBackend
-    {
+    static class TestDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
             #version 330 core
             layout (location = 0) in vec2 va_Vertex;
@@ -281,7 +280,78 @@ class TerrainBackend2: GLSLMaterialBackend
             timeLoc = glGetUniformLocation(shaderProgram, "time");
         }
     }
-    DisplacementTestBackend displacementTest;
+    TestDisplacementBackend testDisplacement;
+
+    static class EruptDisplacementBackend: GLSLMaterialBackend{
+        string vsText = q{
+            #version 330 core
+            layout (location = 0) in vec2 va_Vertex;
+            out vec2 position;
+            void main(){
+                position = va_Vertex;
+                gl_Position = vec4(position,0.0f,1.0f);
+            }
+        };
+        string fsText = q{
+            #version 330 core
+            const float pi = 3.1415926535897932384626433832795f;
+            const float range = 50.0f;
+            const float height = 15.0f;
+            const float growDur = 4.2f;
+            const float fallDur = 0.15f;
+            const float waveRange = 90.0f;
+            const float waveDur = 1.0f;
+            const float reboundHeight=2.0f;
+            uniform vec2 epos;
+            uniform float time;
+            in vec2 position;
+            layout (location = 0) out float displacement;
+
+            void main(){
+                vec2 pos=(0.5f*(position+1.0f)*256.0f-0.5f)*10.0f;
+                float dist=length(pos-epos);
+                displacement=0.0f;
+                if(dist<range){
+                    float scale=0.0f;
+                    if(time<growDur){
+                        scale=time/growDur;
+                    }else if(time<growDur+fallDur){
+                        scale=1.0f-(time-growDur)/fallDur;
+                    }
+                    float shape=0.6f*(1.0f-dist/range);
+                    if(dist<0.8f*range && time<=growDur){
+                        shape+=0.5f*0.4f*(1.0f+cos(pi*dist/(0.8f*range)));
+                    }
+                    displacement+=shape*height*scale;
+                }
+                if(growDur<time&&time<growDur+waveDur){
+                    float progress=(time-growDur)/waveDur;
+                    float waveLoc=waveRange*progress;
+                    float waveSize=(0.8f*range)*(1.0f-0.8f*progress);
+                    float wavePos=abs(dist-waveLoc)/waveSize;
+                    float waveHeight=height*(1.0f-progress);
+                    if(wavePos<1.0f) displacement+=0.5f*0.4f*(1.0f+cos(pi*wavePos))*waveHeight;
+                    displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*progress)*reboundHeight;
+                }
+            }
+        };
+        //displacement=0.5f*(1.0f+cos(pi*dist/range))*height*scale;
+        //displacement=(0.25f*0.5f*(1.0f+cos(pi*dist/range))+0.75f*(1.0f-dist/range))*height*scale;
+        //displacement=exp(-3.0f*pow(dist/range,2))*height*scale;
+        //displacement=(0.5f*exp(-5.0f*pow(dist/range,2))+0.5f*(1.0f-dist/range))*height*scale;
+        override string vertexShaderSrc(){ return vsText; }
+        override string fragmentShaderSrc(){ return fsText; }
+
+        GLint eposLoc;
+        GLint timeLoc;
+
+        this(Owner o){
+            super(o);
+            eposLoc = glGetUniformLocation(shaderProgram, "epos");
+            timeLoc = glGetUniformLocation(shaderProgram, "time");
+        }
+    }
+    EruptDisplacementBackend eruptDisplacement;
 
 
     this(Owner o)
@@ -347,7 +417,8 @@ class TerrainBackend2: GLSLMaterialBackend
         glBindBuffer(GL_ARRAY_BUFFER, displacementVbo);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,cast(void*)0);
 
-        displacementTest = New!DisplacementTestBackend(this);
+        testDisplacement = New!TestDisplacementBackend(this);
+        eruptDisplacement = New!EruptDisplacementBackend(this);
     }
 
     final void bindDisplacement(){
@@ -363,12 +434,21 @@ class TerrainBackend2: GLSLMaterialBackend
         glBindVertexArray(displacementVao);
     }
 
+    final void bindTestDisplacement(){ testDisplacement.bind(null,null); }
     final void drawTestDisplacement(float time){
-        displacementTest.bind(null,null);
-        glUniform1f(displacementTest.timeLoc,time);
+        glUniform1f(testDisplacement.timeLoc,time);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        displacementTest.unbind(null,null);
     }
+    final void unbindTestDisplacement(){ testDisplacement.unbind(null,null); }
+
+    final void bindEruptDisplacement(){ eruptDisplacement.bind(null,null); }
+    final void drawEruptDisplacement(float x,float y,float time){
+        glUniform2f(eruptDisplacement.eposLoc,x,y);
+        glUniform1f(eruptDisplacement.timeLoc,time);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    final void unbindEruptDisplacement(){ eruptDisplacement.unbind(null,null); }
+
     final void unbindDisplacement(){
         glBindVertexArray(0);
         glEnable(GL_DEPTH_TEST);

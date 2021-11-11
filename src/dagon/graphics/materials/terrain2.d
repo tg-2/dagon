@@ -331,7 +331,7 @@ class TerrainBackend2: GLSLMaterialBackend
                     float wavePos=abs(dist-waveLoc)/waveSize;
                     float waveHeight=height*(1.0f-progress);
                     if(wavePos<1.0f) displacement+=0.5f*0.4f*(1.0f+cos(pi*wavePos))*waveHeight;
-                    displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*progress)*reboundHeight;
+                    if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*progress)*reboundHeight;
                 }
             }
         };

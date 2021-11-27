@@ -94,6 +94,7 @@ public
     import dagon.graphics.materials.bone;
     import dagon.graphics.materials.shadeless;
     import dagon.graphics.materials.shadelessBone;
+    import dagon.graphics.materials.shadelessMorph;
     import dagon.graphics.materials.buildingSummon;
     import dagon.graphics.materials.sky;
     import dagon.graphics.materials.sacSky;

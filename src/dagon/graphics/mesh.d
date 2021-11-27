@@ -41,6 +41,13 @@ enum VertexAttrib
     Texcoords = 2
 }
 
+enum VertexAttrib2
+{
+    Vertices = 3,
+    Normals = 4,
+    Texcoords = 5
+}
+
 class Mesh: Owner, Drawable
 {
     bool dataReady = false;
@@ -189,6 +196,31 @@ class Mesh: Owner, Drawable
         {
             glBindVertexArray(vao);
             glDrawElements(GL_TRIANGLES, cast(uint)indices.length * 3, GL_UNSIGNED_INT, cast(void*)0);
+            glBindVertexArray(0);
+        }
+    }
+
+    void morph(Mesh other,RenderingContext* rc){
+        if (canRender)
+        {
+            glBindVertexArray(vao);
+            glEnableVertexAttribArray(VertexAttrib2.Vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, other.vbo);
+            glVertexAttribPointer(VertexAttrib2.Vertices, 3, GL_FLOAT, GL_FALSE, 0, null);
+
+            glEnableVertexAttribArray(VertexAttrib.Normals);
+            glBindBuffer(GL_ARRAY_BUFFER, other.nbo);
+            glVertexAttribPointer(VertexAttrib.Normals, 3, GL_FLOAT, GL_FALSE, 0, null);
+
+            glEnableVertexAttribArray(VertexAttrib2.Texcoords);
+            glBindBuffer(GL_ARRAY_BUFFER, other.tbo);
+            glVertexAttribPointer(VertexAttrib2.Texcoords, 2, GL_FLOAT, GL_FALSE, 0, null);
+
+            glDrawElements(GL_TRIANGLES, cast(uint)indices.length * 3, GL_UNSIGNED_INT, cast(void*)0);
+
+            glDisableVertexAttribArray(VertexAttrib2.Vertices);
+            glDisableVertexAttribArray(VertexAttrib2.Normals);
+            glDisableVertexAttribArray(VertexAttrib2.Texcoords);
             glBindVertexArray(0);
         }
     }

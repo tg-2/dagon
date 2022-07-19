@@ -69,7 +69,7 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
     private string fsText = q{
         #version 330 core
 
-        uniform vec4 color;
+        uniform vec4 color = vec4(1,1,1,1);
         uniform sampler2D diffuseTexture;
 
         in vec2 texCoord;
@@ -136,8 +136,12 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
             }
             glActiveTexture(GL_TEXTURE0);
             idiffuse.texture.bind();
-            Color4f color = Color4f(icolor.asVector4f);
-            glUniform4fv(colorLoc, 1, color.arrayof.ptr);
+            if(icolor){
+                Color4f color = Color4f(icolor.asVector4f);
+                glUniform4fv(colorLoc, 1, color.arrayof.ptr);
+            }else{
+                glUniform4fv(colorLoc, 1, Color4f(1.0f,1.0f,1.0f,1.0f).arrayof.ptr);
+            }
         }else{
             glEnablei(GL_BLEND, 0);
             glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

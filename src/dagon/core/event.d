@@ -205,6 +205,15 @@ class EventManager
         else return 0.0;
     }
 
+    void enableTextInput(){
+        enableKeyRepeat=true;
+        SDL_StartTextInput();
+    }
+    void disableTextInput(){
+        SDL_StopTextInput();
+        enableKeyRepeat=false;
+    }
+
     void update()
     {
         numEvents = 0;
@@ -230,10 +239,19 @@ class EventManager
             Event e;
             switch (event.type)
             {
+                case SDL_TEXTINPUT:
+                    e = Event(EventType.TextInput);
+                    foreach(dchar c;event.text.text){
+                        if(!c) break;
+                        e.unicode=c;
+                        addEvent(e);
+                    }
+                    break;
+
                 case SDL_KEYDOWN:
                     if (event.key.repeat && !enableKeyRepeat)
                         break;
-                    if ((event.key.keysym.unicode & 0xFF80) == 0)
+                    /+if ((event.key.keysym.unicode & 0xFF80) == 0)
                     {
                         auto asciiChar = event.key.keysym.unicode & 0x7F;
                         if (isPrintable(asciiChar))
@@ -248,7 +266,7 @@ class EventManager
                         e = Event(EventType.TextInput);
                         e.unicode = event.key.keysym.unicode;
                         addEvent(e);
-                    }
+                    }+/
 
                     keyPressed[event.key.keysym.scancode] = true;
                     e = Event(EventType.KeyDown);

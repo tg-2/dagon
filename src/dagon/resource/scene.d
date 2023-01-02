@@ -1173,7 +1173,11 @@ class Scene: BaseScene
 
     final void bindEruptDisplacement(){ terrainMaterialBackend.bindEruptDisplacement(); }
     final void eruptDisplacement(float x,float y,float time){ terrainMaterialBackend.drawEruptDisplacement(x,y,time); }
-    final void unbindEruptDisplacement(){ terrainMaterialBackend.unbindTestDisplacement(); }
+    final void unbindEruptDisplacement(){ terrainMaterialBackend.unbindEruptDisplacement(); }
+
+    final void bindQuakeDisplacement(){ terrainMaterialBackend.bindQuakeDisplacement(); }
+    final void quakeDisplacement(float x,float y,float time){ terrainMaterialBackend.drawQuakeDisplacement(x,y,time); }
+    final void unbindQuakeDisplacement(){ terrainMaterialBackend.unbindQuakeDisplacement(); }
 
     abstract bool needTerrainDisplacement();
     abstract void displaceTerrain();

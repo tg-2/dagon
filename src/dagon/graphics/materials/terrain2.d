@@ -325,10 +325,10 @@ class TerrainBackend2: GLSLMaterialBackend
                     displacement+=shape*height*scale;
                 }
                 if(growDur<time&&time<growDur+waveDur){
-	                float reboundProgress=time<growDur+fallDur?0.5f*(time-growDur)/fallDur:0.5f+0.5f*(time-growDur-fallDur)/(waveDur-fallDur);
-	                if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*reboundProgress)*reboundHeight;
+                    float reboundProgress=time<growDur+fallDur?0.5f*(time-growDur)/fallDur:0.5f+0.5f*(time-growDur-fallDur)/(waveDur-fallDur);
+                    if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*reboundProgress)*reboundHeight;
 
-	                float progress=(time-growDur)/waveDur;
+                    float progress=(time-growDur)/waveDur;
                     float waveLoc=waveRange*progress;
                     float waveSize=(0.15f+0.65f*(1.0f-progress)*(1.0f-progress))*range;
                     float wavePos=abs(dist-waveLoc)/waveSize;
@@ -355,6 +355,59 @@ class TerrainBackend2: GLSLMaterialBackend
     }
     EruptDisplacementBackend eruptDisplacement;
 
+    static class QuakeDisplacementBackend: GLSLMaterialBackend{
+        string vsText = q{
+            #version 330 core
+            layout (location = 0) in vec2 va_Vertex;
+            out vec2 position;
+            void main(){
+                position = va_Vertex;
+                gl_Position = vec4(position,0.0f,1.0f);
+            }
+        };
+        string fsText = q{
+            #version 330 core
+            const float pi = 3.1415926535897932384626433832795f;
+            const float waveRange = 50.0f;
+            const float fallDur = 0.15f;
+            const float waveDur = 0.5f;
+            const float waveHeight = 1.5f;
+            const float reboundHeight = 1.5f;
+            uniform vec2 epos;
+            uniform float time;
+            in vec2 position;
+            layout (location = 0) out float displacement;
+
+            void main(){
+                vec2 pos=(0.5f*(position+1.0f)*256.0f-0.5f)*10.0f;
+                float dist=length(pos-epos);
+                displacement=0.0f;
+                // TODO: displacement at time 0 should be constant zero
+                if(time<waveDur){
+                    float reboundProgress=time<fallDur?0.5f*time/fallDur:0.5f+0.5f*(time-fallDur)/(waveDur-fallDur);
+                    if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*reboundProgress)*reboundHeight;
+                    float progress=time/waveDur;
+                    float waveLoc=waveRange*progress;
+                    float waveSize=(0.15f+0.65f*(1.0f-progress)*(1.0f-progress))*waveRange;
+                    float wavePos=abs(dist-waveLoc)/waveSize;
+                    float waveHeight=waveHeight*(1.0f-(progress*progress));
+                    if(wavePos<1.0f) displacement+=(1.0f+cos(pi*wavePos))*waveHeight;
+                }
+            }
+        };
+        override string vertexShaderSrc(){ return vsText; }
+        override string fragmentShaderSrc(){ return fsText; }
+
+        GLint eposLoc;
+        GLint timeLoc;
+
+        this(Owner o){
+            super(o);
+            eposLoc = glGetUniformLocation(shaderProgram, "epos");
+            timeLoc = glGetUniformLocation(shaderProgram, "time");
+        }
+    }
+    QuakeDisplacementBackend quakeDisplacement;
 
     this(Owner o)
     {
@@ -421,6 +474,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
         testDisplacement = New!TestDisplacementBackend(this);
         eruptDisplacement = New!EruptDisplacementBackend(this);
+        quakeDisplacement = New!QuakeDisplacementBackend(this);
     }
 
     final void bindDisplacement(){
@@ -450,6 +504,14 @@ class TerrainBackend2: GLSLMaterialBackend
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
     final void unbindEruptDisplacement(){ eruptDisplacement.unbind(null,null); }
+
+    final void bindQuakeDisplacement(){ quakeDisplacement.bind(null,null); }
+    final void drawQuakeDisplacement(float x,float y,float time){
+        glUniform2f(quakeDisplacement.eposLoc,x,y);
+        glUniform1f(quakeDisplacement.timeLoc,time);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    final void unbindQuakeDisplacement(){ quakeDisplacement.unbind(null,null); }
 
     final void unbindDisplacement(){
         glBindVertexArray(0);

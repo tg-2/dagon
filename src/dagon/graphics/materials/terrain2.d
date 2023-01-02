@@ -301,7 +301,7 @@ class TerrainBackend2: GLSLMaterialBackend
             const float fallDur = 0.15f;
             const float waveRange = 90.0f;
             const float waveDur = 1.0f;
-            const float reboundHeight=2.0f;
+            const float reboundHeight=3.0f;
             uniform vec2 epos;
             uniform float time;
             in vec2 position;
@@ -319,19 +319,21 @@ class TerrainBackend2: GLSLMaterialBackend
                         scale=1.0f-(time-growDur)/fallDur;
                     }
                     float shape=0.6f*(1.0f-dist/range);
-                    if(dist<0.8f*range && time<=growDur){
+                    if(dist<0.8f*range && time<=growDur+fallDur){
                         shape+=0.5f*0.4f*(1.0f+cos(pi*dist/(0.8f*range)));
                     }
                     displacement+=shape*height*scale;
                 }
                 if(growDur<time&&time<growDur+waveDur){
-                    float progress=(time-growDur)/waveDur;
+	                float reboundProgress=time<growDur+fallDur?0.5f*(time-growDur)/fallDur:0.5f+0.5f*(time-growDur-fallDur)/(waveDur-fallDur);
+	                if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*reboundProgress)*reboundHeight;
+
+	                float progress=(time-growDur)/waveDur;
                     float waveLoc=waveRange*progress;
-                    float waveSize=(0.8f*range)*(1.0f-0.8f*progress);
+                    float waveSize=(0.15f+0.65f*(1.0f-progress)*(1.0f-progress))*range;
                     float wavePos=abs(dist-waveLoc)/waveSize;
-                    float waveHeight=height*(1.0f-progress);
+                    float waveHeight=height*(1.0f-(progress*progress));
                     if(wavePos<1.0f) displacement+=0.5f*0.4f*(1.0f+cos(pi*wavePos))*waveHeight;
-                    if(dist<waveRange) displacement-=(1.0f+cos(pi*dist/waveRange))*sin(pi*progress)*reboundHeight;
                 }
             }
         };

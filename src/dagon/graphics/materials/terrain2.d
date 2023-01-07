@@ -372,7 +372,8 @@ class TerrainBackend2: GLSLMaterialBackend
             const float fallDur = 0.15f;
             const float waveDur = 0.5f;
             const float waveHeight = 1.5f;
-            const float reboundHeight = 1.5f;
+            const float growDur = 0.05f;
+            const float reboundHeight = 2.0f;
             uniform vec2 epos;
             uniform float time;
             in vec2 position;
@@ -391,7 +392,7 @@ class TerrainBackend2: GLSLMaterialBackend
                     float waveSize=(0.15f+0.65f*(1.0f-progress)*(1.0f-progress))*waveRange;
                     float wavePos=abs(dist-waveLoc)/waveSize;
                     float waveHeight=waveHeight*(1.0f-(progress*progress));
-                    if(wavePos<1.0f) displacement+=(1.0f+cos(pi*wavePos))*waveHeight;
+                    if(wavePos<1.0f) displacement+=(1.0f+cos(pi*wavePos))*waveHeight*min(1.0f,time/growDur);
                 }
             }
         };

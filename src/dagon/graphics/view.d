@@ -27,13 +27,15 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.view;
 
+import core.time: Duration;
+
 import dlib.math.vector;
 import dlib.math.matrix;
 import dagon.graphics.rc;
 
 interface View
 {
-    void update(double dt);
+    void update(Duration dt);
     Matrix4x4f viewMatrix();
     Matrix4x4f invViewMatrix();
     Vector3f cameraPosition();

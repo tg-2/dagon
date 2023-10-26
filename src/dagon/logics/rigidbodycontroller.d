@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.logics.rigidbodycontroller;
 
+import core.time: Duration;
+
 import dlib.math.matrix;
 import dlib.math.transformation;
 import dagon.logics.entity;
@@ -45,7 +47,7 @@ class RigidBodyController: EntityController
         b.orientation = e.rotation;
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {
         entity.position = rbody.position;
         entity.rotation = rbody.orientation; 

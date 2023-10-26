@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.fpview;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.math.vector;
 import dlib.math.matrix;
@@ -56,7 +58,7 @@ class FirstPersonView: EventListener, View
         camEntity.controller = camera;
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         processEvents();
                 

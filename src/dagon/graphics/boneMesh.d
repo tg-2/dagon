@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.boneMesh;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.geometry.triangle;
 import dlib.math.vector;
@@ -220,7 +222,7 @@ class BoneMesh: Owner, Drawable
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
     }
 

@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 module dagon.graphics.tbcamera;
 
 import std.math;
+import core.time: Duration;
 
 import dlib.core.memory;
 import dlib.math.utils;
@@ -126,7 +127,7 @@ final class TrackballCamera
         target_zoom = 0.0f;
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         if (current_zoom < target_zoom)
         {

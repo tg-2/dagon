@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.animmodel;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.math.vector;
 import dlib.math.matrix;
@@ -237,14 +239,14 @@ class Actor: Owner, Drawable
         playing = false;
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         if (!playing)
             return;
 
         model.calcFrame(state.currentFrame, state.nextFrame, state.t, &frameData);
 
-        state.t += defaultFramerate * dt * speed; //animation.framerate
+        state.t += defaultFramerate * (dt.total!"hnsecs"*1e-7) * speed; //animation.framerate
 
         if (state.t >= 1.0f)
         {
@@ -266,8 +268,8 @@ class Actor: Owner, Drawable
         if (hasNextAnimation)
         {
             model.blendFrame(nextState.currentFrame, nextState.nextFrame, nextState.t, &frameData, blendFactor);
-            nextState.t += defaultFramerate * dt * speed; //nextAnimation.framerate
-            blendFactor += dt; // TODO: time multiplier
+            nextState.t += defaultFramerate * (dt.total!"hnsecs"*1e-7) * speed; //nextAnimation.framerate
+            blendFactor += dt.total!"hnsecs"*1e-7; // TODO: time multiplier
 
             if (nextState.t >= 1.0f)
             {

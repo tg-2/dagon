@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.terrainMesh;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.geometry.triangle;
 import dlib.math.vector;
@@ -162,7 +164,7 @@ class TerrainMesh: Owner, Drawable
         canRender = true;
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
     }
 

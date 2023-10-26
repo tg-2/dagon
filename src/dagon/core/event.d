@@ -31,6 +31,7 @@ module dagon.core.event;
 import std.stdio;
 import std.ascii;
 import std.conv;
+import core.time;
 import derelict.sdl2.sdl;
 import dlib.core.memory;
 import dagon.core.ownership;
@@ -95,9 +96,8 @@ class EventManager
     int mouseWheelY = 0;
     bool enableKeyRepeat = false;
 
-    double deltaTime = 0.0;
+    Duration deltaTime;
     double averageDelta = 0.0;
-    uint deltaTimeMs = 0;
     int fps = 0;
 
     //uint videoWidth;
@@ -429,25 +429,25 @@ class EventManager
 
     void updateTimer()
     {
-        static int currentTime;
-        static int lastTime;
+        alias Time = MonoTimeImpl!(ClockType.precise);
+        static Time currentTime;
+        static Time lastTime;
 
-        static int FPSTickCounter;
+        static Duration FPSTickCounter;
         static int FPSCounter = 0;
 
-        currentTime = SDL_GetTicks();
+        currentTime = Time.currTime();
         auto elapsedTime = currentTime - lastTime;
         lastTime = currentTime;
-        deltaTimeMs = elapsedTime;
-        deltaTime = cast(double)(elapsedTime) * 0.001;
+        deltaTime = elapsedTime;
 
         FPSTickCounter += elapsedTime;
         FPSCounter++;
-        if (FPSTickCounter >= 1000) // 1 sec interval
+        if (FPSTickCounter >= 1.dur!"seconds")
         {
             fps = FPSCounter;
             FPSCounter = 0;
-            FPSTickCounter = 0;
+            FPSTickCounter = Duration.zero;
             averageDelta = 1.0 / cast(double)(fps);
         }
     }

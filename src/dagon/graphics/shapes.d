@@ -28,6 +28,8 @@ DEALINGS IN THE SOFTWARE.
 module dagon.graphics.shapes;
 
 import std.math;
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.math.vector;
 import dlib.container.array;
@@ -155,7 +157,7 @@ class ShapeQuad: Owner, Drawable
         glDeleteBuffers(1, &eao);
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
     }
 

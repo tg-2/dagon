@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.rc;
 
+import core.time: Duration;
+
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.transformation;
@@ -68,7 +70,7 @@ struct RenderingContext
     Material overrideMaterial;
     GenericMaterialBackend overrideMaterialBackend;
 
-    float time;
+    Duration time;
     float blurMask;
 
     Vector4f information=Vector4f(0.0f,0.0f,0.0f,1.0f);
@@ -104,7 +106,7 @@ struct RenderingContext
         environment = env;
         overrideMaterial = null;
         overrideMaterialBackend = null;
-        time = 0.0f;
+        time = Duration.zero;
         depthPass = true;
         colorPass = true;
         blurMask = 1.0f;

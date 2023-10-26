@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.freeview;
 
+import core.time: Duration, dur;
+
 import dlib.core.memory;
 import dlib.math.vector;
 import dlib.math.matrix;
@@ -61,7 +63,7 @@ class Freeview: EventListener, View
         camera.pitch(45.0f);
         camera.turn(45.0f);
         camera.setZoom(20.0f);
-        camera.update(1.0 / 60.0);
+        camera.update(1.dur!"seconds" / 60);
     }
 
     ~this()
@@ -88,7 +90,7 @@ class Freeview: EventListener, View
         camera.setZoom(z);
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         processEvents();
 

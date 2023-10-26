@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 module dagon.resource.asset;
 
 import std.stdio;
+import core.time: Duration, dur;
 
 import dlib.core.memory;
 import dlib.core.stream;
@@ -73,9 +74,9 @@ class AssetManager: Owner
     Thread loadingThread;
 
     bool liveUpdate = false;
-    double liveUpdatePeriod = 5.0;
+    auto liveUpdatePeriod = 5.dur!"seconds";
 
-    protected double monitorTimer = 0.0;
+    protected auto monitorTimer = Duration.zero;
 
     float nextLoadingPercentage = 0.0f;
     
@@ -235,7 +236,7 @@ class AssetManager: Owner
     void loadThreadSafePart()
     {
         nextLoadingPercentage = 0.0f;
-        monitorTimer = 0.0;
+        monitorTimer = Duration.zero;
         loadingThread.start();
     }
 
@@ -273,14 +274,14 @@ class AssetManager: Owner
         return fs.stat(filename, stat);
     }
 
-    void updateMonitor(double dt)
+    void updateMonitor(Duration dt)
     {
         if (liveUpdate)
         {
             monitorTimer += dt;
             if (monitorTimer >= liveUpdatePeriod)
             {
-                monitorTimer = 0.0;
+                monitorTimer = Duration.zero;
                 foreach(filename, asset; assetsByFilename)
                     monitorCheck(filename, asset);
             }

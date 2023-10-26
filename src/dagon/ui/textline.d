@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.ui.textline;
 
+import core.time: Duration;
+
 import derelict.opengl;
 import derelict.freetype.ft;
 
@@ -67,7 +69,7 @@ class TextLine: Owner, Drawable
         this.color = Color4f(0, 0, 0);
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {
     }
 

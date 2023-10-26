@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 module dagon.logics.charactercontroller;
 
 import std.math;
+import core.time: Duration;
 
 import dlib.core.memory;
 import dlib.math.vector;
@@ -145,7 +146,7 @@ class CharacterController: EntityController
         rbody.linearVelocity += velocityChange;
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {        
         entity.position = rbody.position;
         entity.rotation = rbody.orientation; 

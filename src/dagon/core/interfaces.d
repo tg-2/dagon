@@ -27,10 +27,12 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.core.interfaces;
 
+import core.time: Duration;
+
 public import dagon.graphics.rc;
 
 interface Drawable
 {
-    void update(double dt);
+    void update(Duration dt);
     void render(RenderingContext* rc);
 }

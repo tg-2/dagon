@@ -30,6 +30,7 @@ module dagon.resource.scene;
 import std.stdio;
 import std.math;
 import std.algorithm;
+import core.time: Duration, dur;
 
 import dlib.core.memory;
 
@@ -152,7 +153,7 @@ class BaseScene: EventListener
         // Do your finalization here
     }
 
-    void onUpdate(double dt)
+    void onUpdate(Duration dt)
     {
         // Do your animation and logics here
     }
@@ -226,7 +227,7 @@ class BaseScene: EventListener
             onEnd();
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         if (canRun)
         {
@@ -307,7 +308,7 @@ class SceneManager: Owner
         //writefln("Running...", name);
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         if (currentScene)
         {
@@ -335,7 +336,7 @@ class SceneApplication: Application
         sceneManager = New!SceneManager(eventManager, this);
     }
 
-    override void onUpdate(double dt)
+    override void onUpdate(Duration dt)
     {
         sceneManager.update(dt);
     }
@@ -671,8 +672,8 @@ class Scene: BaseScene
     MinimapMaterialBackend minimapMaterialBackend;
     GenericMaterial mLoadingProgressBar;
 
-    double timer = 0.0;
-    double fixedTimeStep = 1.0 / 60.0;
+    auto timer = Duration.zero;
+    auto fixedTimeStep = 1.dur!"seconds" / 60;
 
     int width, height;
     float screenScaling;
@@ -979,12 +980,12 @@ class Scene: BaseScene
         mLoadingProgressBar.diffuse = Color4f(0.1, 0.1, 0.1, 1);
         eLoadingProgressBar.position = Vector3f(x, y, 0);
         eLoadingProgressBar.scaling = Vector3f(maxWidth, 10, 1);
-        eLoadingProgressBar.update(1.0/60.0);
+        eLoadingProgressBar.update(1.dur!"seconds"/60);
         eLoadingProgressBar.render(&rc2d);
 
         mLoadingProgressBar.diffuse = Color4f(1, 1, 1, 1);
         eLoadingProgressBar.scaling = Vector3f(w, 10, 1);
-        eLoadingProgressBar.update(1.0/60.0);
+        eLoadingProgressBar.update(1.dur!"seconds"/60);
         eLoadingProgressBar.render(&rc2d);
     }
 
@@ -994,11 +995,11 @@ class Scene: BaseScene
         rc3d.initPerspective(width, height, aspectRatio, environment, 62.0f, 0.1f, 10000.0f);
         rc2d.initOrtho(width, height, environment, 0.0f, 100.0f);
 
-        timer = 0.0;
-        onViewUpdate(0.0f);
+        timer = Duration.zero;
+        onViewUpdate(Duration.zero);
     }
 
-    void onViewUpdate(double dt){
+    void onViewUpdate(Duration dt){
         if (view)
         {
             view.update(dt);
@@ -1022,11 +1023,11 @@ class Scene: BaseScene
         lightManager.update(&rc3d);
     }
 
-    void onLogicsUpdate(double dt)
+    void onLogicsUpdate(Duration dt)
     {
     }
 
-    override void onUpdate(double dt)
+    override void onUpdate(Duration dt)
     {
 /+        foreach(e; entities3D)
             e.processEvents();

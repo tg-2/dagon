@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.logics.controller;
 
+import core.time: Duration;
+
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.transformation;
@@ -46,7 +48,7 @@ abstract class EntityController: Owner
         entity = e;
     }
 
-    void update(double dt);
+    void update(Duration dt);
 }
 
 class DefaultEntityController: EntityController
@@ -58,7 +60,7 @@ class DefaultEntityController: EntityController
         super(e);
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {
         entity.transformation = 
             translationMatrix(entity.position) *

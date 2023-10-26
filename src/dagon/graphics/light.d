@@ -31,6 +31,7 @@ import std.stdio;
 import std.math;
 import std.conv;
 import std.random;
+import core.time;
 
 import dlib.core.memory;
 import dlib.math.vector;
@@ -403,7 +404,7 @@ class LightBehaviour: Behaviour
         this.light = light;
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {
         light.position = entity.position;
     }

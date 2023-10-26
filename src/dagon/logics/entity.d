@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.logics.entity;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.container.array;
 
@@ -223,7 +225,7 @@ class Entity: Owner, Drawable
         prevTransformation = transformation;
 
         if (controller)
-            controller.update(0.0);
+            controller.update(Duration.zero);
 
         if (parent)
         {
@@ -237,7 +239,7 @@ class Entity: Owner, Drawable
         }
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
         updateTransformation();
 

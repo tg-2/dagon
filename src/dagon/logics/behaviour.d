@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.logics.behaviour;
 
+import core.time;
+
 import dagon.core.interfaces;
 import dagon.core.ownership;
 import dagon.core.event;
@@ -43,7 +45,7 @@ class Behaviour: EventListener, Drawable
         entity = e;
     }
 
-    void update(double dt) {}
+    void update(Duration dt) {}
     void bind() {}
     void unbind() {}
     void render(RenderingContext* rc) {}

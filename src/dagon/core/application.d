@@ -35,6 +35,7 @@ import std.conv;
 import std.getopt;
 import std.string;
 import std.file;
+import core.time: Duration;
 import core.stdc.stdlib;
 import core.stdc.signal;
 
@@ -272,7 +273,7 @@ class Application: EventListener
         }
     }
 
-    void onUpdate(double dt)
+    void onUpdate(Duration dt)
     {
         // Override me
     }

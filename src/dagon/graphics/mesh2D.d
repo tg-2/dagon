@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.mesh2D;
 
+import core.time: Duration;
+
 import dlib.core.memory;
 import dlib.geometry.triangle;
 import dlib.math.vector;
@@ -113,7 +115,7 @@ class Mesh2D: Owner, Drawable
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    void update(double dt)
+    void update(Duration dt)
     {
     }
 

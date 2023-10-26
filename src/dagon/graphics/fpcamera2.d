@@ -27,6 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 module dagon.graphics.fpcamera2;
 
+import core.time: Duration;
+
 import derelict.opengl.gl;
 
 import dlib.core.memory;
@@ -72,7 +74,7 @@ class FirstPersonCamera2: EntityController
         return m;
     }
 
-    override void update(double dt)
+    override void update(Duration dt)
     {
         transformation = worldTrans();
         invTransformation = transformation.inverse;

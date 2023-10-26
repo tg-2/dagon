@@ -30,6 +30,7 @@ module dagon.graphics.shadow;
 import std.stdio;
 import std.math;
 import std.conv;
+import core.time: Duration;
 
 import dlib.core.memory;
 import dlib.math.vector;
@@ -101,7 +102,7 @@ class ShadowArea: Owner
         this.invViewMatrix = Matrix4x4f.identity;
     }
 
-    void update(RenderingContext* rc, double dt)
+    void update(RenderingContext* rc, Duration dt)
     {
         auto t = translationMatrix(position);
         auto r = environment.sunRotation.toMatrix4x4;
@@ -500,7 +501,7 @@ class CascadedShadowMap: Owner
             glDeleteTextures(1, &depthTexture);
     }
 
-    void update(RenderingContext* rc, double dt)
+    void update(RenderingContext* rc, Duration dt)
     {
         foreach(i;0..area.length)
             area[i].update(rc, dt);

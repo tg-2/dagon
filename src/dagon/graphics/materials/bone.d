@@ -46,7 +46,7 @@ class BoneBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 450 core
+        #version 330 core
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -55,6 +55,7 @@ class BoneBackend: GLSLMaterialBackend
         uniform mat4 prevModelViewProjMatrix;
         uniform mat4 blurModelViewProjMatrix;
 
+        uniform mat4 pose[32];
         uniform float bulk = 1.0f;
 
         layout (location = 0) in vec3 va_Vertex0;
@@ -64,7 +65,6 @@ class BoneBackend: GLSLMaterialBackend
         layout (location = 4) in vec2 va_Texcoord;
         layout (location = 5) in uvec3 va_BoneIndices;
         layout (location = 6) in vec3 va_Weights;
-        layout (location = 7) uniform mat4 pose[32];
 
         out vec2 texCoord;
         out vec3 eyePosition;
@@ -213,6 +213,7 @@ class BoneBackend: GLSLMaterialBackend
     GLint prevModelViewProjMatrixLoc;
     GLint blurModelViewProjMatrixLoc;
 
+    GLint poseLoc;
     GLint bulkLoc;
 
     GLint diffuseTextureLoc;
@@ -241,10 +242,12 @@ class BoneBackend: GLSLMaterialBackend
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         normalMatrixLoc = glGetUniformLocation(shaderProgram, "normalMatrix");
 
-        bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
 
         prevModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "prevModelViewProjMatrix");
         blurModelViewProjMatrixLoc = glGetUniformLocation(shaderProgram, "blurModelViewProjMatrix");
+
+        poseLoc = glGetUniformLocation(shaderProgram, "pose");
+        bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
 
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
         normalTextureLoc = glGetUniformLocation(shaderProgram, "normalTexture");
@@ -270,6 +273,9 @@ class BoneBackend: GLSLMaterialBackend
     final void setAlpha(float alpha){ }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
+    final void setPose(Matrix4x4f[] pose){
+        glUniformMatrix4fv(poseLoc, cast(int)pose.length, GL_FALSE, cast(float*)pose.ptr);
     }
     final void setBulk(float bulk){
         glUniform1f(bulkLoc, bulk);

@@ -46,7 +46,6 @@ enum VertexAttrib
     Texcoords = 4,
     BoneIndices = 5,
     Weights = 6,
-    Pose = 7,
 }
 
 class BoneMesh: Owner, Drawable
@@ -61,8 +60,6 @@ class BoneMesh: Owner, Drawable
     uint[3][] boneIndices;
     Vector3f[] weights;
     uint[3][] indices;
-
-    Matrix4x4f[] pose; // (not owned)
 
     GLuint[3] vbo;
     GLuint vao = 0, nbo = 0, tbo = 0, eao = 0;
@@ -94,40 +91,48 @@ class BoneMesh: Owner, Drawable
         }
     }
 
-    final Vector3f getVertex(int i){
+    final Vector3f getVertex(int i,Matrix4f[] pose){
         return weights[i].x*(vertices[0][i]*pose[boneIndices[i][0]]) // (dlib matrix multipy uses wrong convention...)
             + weights[i].y*(vertices[1][i]*pose[boneIndices[i][1]])
             + weights[i].z*(vertices[2][i]*pose[boneIndices[i][2]]);
     }
 
-    int opApply(scope int delegate(Triangle t) dg)
-    {
-        int result = 0;
+    final triangles(Matrix4f[] pose){
+        static struct Triangles{
+            BoneMesh self;
+            Matrix4f[] pose;
+            int opApply(scope int delegate(Triangle t) dg)
+            {
+                with(self){
+                    int result = 0;
 
-        foreach(i, ref f; indices)
-        {
-            Triangle tri;
+                    foreach(i, ref f; indices){
+                        Triangle tri;
 
-            tri.v[0] = getVertex(f[0]);
-            tri.v[1] = getVertex(f[1]);
-            tri.v[2] = getVertex(f[2]);
-            tri.n[0] = normals[f[0]];
-            tri.n[1] = normals[f[1]];
-            tri.n[2] = normals[f[2]];
-            tri.t1[0] = texcoords[f[0]];
-            tri.t1[1] = texcoords[f[1]];
-            tri.t1[2] = texcoords[f[2]];
-            tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                        tri.v[0] = getVertex(f[0],pose);
+                        tri.v[1] = getVertex(f[1],pose);
+                        tri.v[2] = getVertex(f[2],pose);
+                        tri.n[0] = normals[f[0]];
+                        tri.n[1] = normals[f[1]];
+                        tri.n[2] = normals[f[2]];
+                        tri.t1[0] = texcoords[f[0]];
+                        tri.t1[1] = texcoords[f[1]];
+                        tri.t1[2] = texcoords[f[2]];
+                        tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
 
-            result = dg(tri);
-            if (result)
-                break;
+                        result = dg(tri);
+                    if (result)
+                        break;
+                    }
+
+                    return result;
+                }
+            }
         }
-
-        return result;
+        return Triangles(this, pose);
     }
 
-    void generateNormals()
+    void generateNormals(Matrix4f[] pose)
     {
         if (normals.length == 0)
             return;
@@ -136,9 +141,9 @@ class BoneMesh: Owner, Drawable
 
         foreach(i, ref f; indices)
         {
-            Vector3f v0 = getVertex(f[0]);
-            Vector3f v1 = getVertex(f[1]);
-            Vector3f v2 = getVertex(f[2]);
+            Vector3f v0 = getVertex(f[0], pose);
+            Vector3f v1 = getVertex(f[1], pose);
+            Vector3f v2 = getVertex(f[2], pose);
 
             Vector3f p = cross(v1 - v0, v2 - v0);
 
@@ -230,7 +235,6 @@ class BoneMesh: Owner, Drawable
     {
         if (canRender)
         {
-            glUniformMatrix4fv(VertexAttrib.Pose, cast(int)pose.length, GL_FALSE, cast(float*)pose.ptr);
             glBindVertexArray(vao);
             glDrawElements(GL_TRIANGLES, cast(uint)indices.length * 3, GL_UNSIGNED_INT, cast(void*)0);
             glBindVertexArray(0);

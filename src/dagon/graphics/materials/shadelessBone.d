@@ -52,7 +52,7 @@ import dagon.graphics.materials.generic;
 class ShadelessBoneBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 450 core
+        #version 330 core
 
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
@@ -60,7 +60,6 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         layout (location = 4) in vec2 va_Texcoord;
         layout (location = 5) in uvec3 va_BoneIndices;
         layout (location = 6) in vec3 va_Weights;
-        layout (location = 7) uniform mat4 pose[32];
 
         out vec3 eyePosition;
         out vec2 texCoord;
@@ -68,6 +67,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
+        uniform mat4 pose[32];
         uniform float bulk = 1.0f;
 
         void main()
@@ -139,6 +139,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     GLint modelViewMatrixLoc;
     GLint projectionMatrixLoc;
 
+    GLint poseLoc;
     GLint bulkLoc;
 
     GLint diffuseTextureLoc;
@@ -157,6 +158,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
 
+        poseLoc = glGetUniformLocation(shaderProgram, "pose");
         bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
 
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
@@ -183,6 +185,9 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     }
     final void setInformation(Vector4f information){
         glUniform4fv(informationLoc, 1, information.arrayof.ptr);
+    }
+    final void setPose(Matrix4x4f[] pose){
+        glUniformMatrix4fv(poseLoc, cast(int)pose.length, GL_FALSE, cast(float*)pose.ptr);
     }
     final void setBulk(float bulk){
         glUniform1f(bulkLoc, bulk);

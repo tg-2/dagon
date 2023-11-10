@@ -1,0 +1,3 @@
+[submodule "DerelictGL3"]
+	path = DerelictGL3
+	url = ../DerelictGL3

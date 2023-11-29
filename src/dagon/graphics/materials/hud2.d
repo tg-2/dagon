@@ -133,6 +133,11 @@ class HUDMaterialBackend2: GLSLMaterialBackend
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)
     {
+        auto idiffuse = "diffuse" in mat.inputs;
+
+        glActiveTexture(GL_TEXTURE0);
+        idiffuse.texture.unbind();
+
         glUseProgram(0);
     }
 }

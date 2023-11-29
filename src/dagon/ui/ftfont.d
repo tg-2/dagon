@@ -374,6 +374,7 @@ final class FreeTypeFont: Font
         FT_BitmapGlyph bitmapGlyph = cast(FT_BitmapGlyph)(glyph.ftGlyph);
         FT_Bitmap bitmap = bitmapGlyph.bitmap;
 
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, glyph.textureId);
         glUniform1i(glyphTextureLoc, 0);
 
@@ -457,6 +458,9 @@ final class FreeTypeFont: Font
     void bind(RenderingContext* rc){
         glUseProgram(shaderProgram);
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
+
+        glEnablei(GL_BLEND, 0);
+        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     void unbind(RenderingContext* rc){
         glUseProgram(0);
@@ -481,6 +485,9 @@ final class FreeTypeFont: Font
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
         glUniform4fv(glyphColorLoc, 1, color.arrayof.ptr);
+
+        glEnablei(GL_BLEND, 0);
+        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         float shift = 0.0f;
         UTF8Decoder dec = UTF8Decoder(str);

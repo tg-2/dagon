@@ -494,9 +494,15 @@ class GBuffer: Owner
         glBindBuffer(GL_PIXEL_PACK_BUFFER, informationPBO);
         glBufferData(GL_PIXEL_PACK_BUFFER, Vector4f.sizeof, null, GL_STREAM_READ);
     }
+
     final void startInformationDownload(int x,int y){
         glBindBuffer(GL_PIXEL_PACK_BUFFER,informationPBO);
-        glGetTextureSubImage(informationTexture,0,x,y,0,1,1,1,GL_RGBA,GL_FLOAT,Vector4f.sizeof,null);
+        if(glGetTextureSubImage is null){
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+            glReadBuffer(GL_COLOR_ATTACHMENT6);
+            glReadPixels(x,y,1,1,GL_RGBA,GL_FLOAT,null);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        }else glGetTextureSubImage(informationTexture,0,x,y,0,1,1,1,GL_RGBA,GL_FLOAT,Vector4f.sizeof,null);
     }
     final Vector4f getInformation(){
         glBindBuffer(GL_PIXEL_PACK_BUFFER, informationPBO);

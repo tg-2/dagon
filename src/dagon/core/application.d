@@ -95,7 +95,7 @@ class Application: EventListener
         * `windowTitle` - window title
         * `args` - command line arguments
     +/
-    this(uint winWidth, uint winHeight, bool fullscreen, string windowTitle, string[] args)
+    this(uint winWidth, uint winHeight, bool detectResolution, bool resizable, bool fullscreen, string windowTitle, string[] args)
     {
         try
         {
@@ -210,6 +210,14 @@ class Application: EventListener
         width = winWidth;
         height = winHeight;
 
+        detectResolution|=width==0||height==0;
+        if (detectResolution){
+            SDL_DisplayMode dm;
+            SDL_GetCurrentDisplayMode(0,&dm);
+            width=dm.w;
+            height=dm.h;
+        }
+
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -220,15 +228,12 @@ class Application: EventListener
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-        if (fullscreen && (width==0||height==0)){
-            SDL_DisplayMode dm;
-            SDL_GetCurrentDisplayMode(0,&dm);
-            width=dm.w;
-            height=dm.h;
-        }
+        auto windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+        if (resizable) windowFlags |= SDL_WINDOW_RESIZABLE;
+        if (fullscreen) windowFlags |= SDL_WINDOW_FULLSCREEN;
 
         window = SDL_CreateWindow(toStringz(windowTitle),
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width?width:1, height?height:1, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width?width:1, height?height:1, windowFlags);
         if (window is null)
             exitWithError("Failed to create window: " ~ to!string(SDL_GetError()));
 
@@ -247,11 +252,8 @@ class Application: EventListener
             exitWithError("Sorry, Dagon requires OpenGL 4.0!");
         }
 
-        if (fullscreen)
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-
         EventManager eventManager = new EventManager(window, width, height);
-        if(width==0||height==0){
+        if(!fullscreen&&detectResolution){
             eventManager.update();
             int w,h;
             SDL_GetWindowSize(window,cast(int*)&w,cast(int*)&h);

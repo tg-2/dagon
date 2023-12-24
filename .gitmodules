@@ -1,3 +1,6 @@
 [submodule "DerelictGL3"]
 	path = DerelictGL3
 	url = ../DerelictGL3
+[submodule "DerelictSDL2"]
+	path = DerelictSDL2
+	url = ./DerelictSDL2

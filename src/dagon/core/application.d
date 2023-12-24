@@ -142,25 +142,17 @@ class Application: EventListener
                 {
                     if (exists("lib/x86/libSDL2-2.0.so"))
                         DerelictSDL2.load("lib/x86/libSDL2-2.0.so");
-                    else
-                        DerelictSDL2.load();
 
                     if (exists("lib/x86/libfreetype.so"))
                         DerelictFT.load("lib/x86/libfreetype.so");
-                    else
-                        DerelictFT.load();
                 }
                 version(X86_64)
                 {
                     if (exists("lib/x64/libSDL2-2.0.so"))
                         DerelictSDL2.load("lib/x64/libSDL2-2.0.so");
-                    else
-                        DerelictSDL2.load();
 
                     if (exists("lib/x64/libfreetype.so"))
                         DerelictFT.load("lib/x64/libfreetype.so");
-                    else
-                        DerelictFT.load();
                 }
             }
             version(Windows)
@@ -169,40 +161,23 @@ class Application: EventListener
                 {
                     if (exists("lib/x86/SDL2.dll"))
                         DerelictSDL2.load("lib/x86/SDL2.dll");
-                    else
-                        DerelictSDL2.load();
 
                     if (exists("lib/x86/freetype281.dll"))
                         DerelictFT.load("lib/x86/freetype281.dll");
-                    else
-                        DerelictFT.load();
                 }
                 version(X86_64)
                 {
                     if (exists("lib/x64/SDL2.dll"))
                         DerelictSDL2.load("lib/x64/SDL2.dll");
-                    else
-                        DerelictSDL2.load();
 
                     if (exists("lib/x64/freetype281.dll"))
                         DerelictFT.load("lib/x64/freetype281.dll");
-                    else
-                        DerelictFT.load();
                 }
             }
         }
 
-        version(FreeBSD)
-        {
-            DerelictSDL2.load();
-            DerelictFT.load();
-        }
-
-        version(OSX)
-        {
-            DerelictSDL2.load();
-            DerelictFT.load();
-        }
+        if(!DerelictSDL2.isLoaded) DerelictSDL2.load();
+        if(!DerelictFT.isLoaded) DerelictFT.load();
 
         if (SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE) == -1)
             exitWithError("Failed to init SDL: " ~ to!string(SDL_GetError()));

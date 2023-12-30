@@ -63,7 +63,7 @@ class ShadelessMorphBackend: GLSLMaterialBackend
         layout (location = 3) in vec3 va_Vertex2;
         layout (location = 5) in vec2 va_Texcoord2;
 
-        out vec3 eyePosition;
+        //out vec3 eyePosition;
         out vec2 texCoord;
 
         uniform mat4 modelViewMatrix;
@@ -74,7 +74,7 @@ class ShadelessMorphBackend: GLSLMaterialBackend
         void main()
         {
             vec4 pos = modelViewMatrix * vec4((1.0f-morphProgress)*va_Vertex+morphProgress*va_Vertex2, 1.0);
-            eyePosition = pos.xyz;
+            //eyePosition = pos.xyz;
 
             texCoord = (1.0f-morphProgress)*va_Texcoord+morphProgress*va_Texcoord2;
             gl_Position = projectionMatrix * pos;
@@ -92,14 +92,12 @@ class ShadelessMorphBackend: GLSLMaterialBackend
 
         uniform vec4 information;
 
-        in vec3 eyePosition;
+        //in vec3 eyePosition;
         in vec2 texCoord;
 
         layout(location = 0) out vec4 frag_color;
-        layout(location = 2) out vec4 frag_position;
-        layout(location = 4) out vec4 frag_velocity;
-        layout(location = 5) out vec4 frag_luma;
-        layout(location = 6) out vec4 frag_information;
+        layout(location = 1) out vec4 frag_luma;
+        layout(location = 2) out vec4 frag_information;
 
         float luminance(vec3 color)
         {
@@ -120,8 +118,8 @@ class ShadelessMorphBackend: GLSLMaterialBackend
             vec4 col = texture(diffuseTexture, texCoord);
             frag_color = vec4(toLinear(col.rgb*color.rgb) * energy, col.a * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
-            frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
-            frag_position = vec4(eyePosition, 0.0);
+            //frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
+            //frag_position = vec4(eyePosition, 0.0);
             frag_information = information;
         }
     ";

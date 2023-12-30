@@ -62,7 +62,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         layout (location = 5) in uvec3 va_BoneIndices;
         layout (location = 6) in vec3 va_Weights;
 
-        out vec3 eyePosition;
+        //out vec3 eyePosition;
         out vec2 texCoord;
 
         uniform mat4 modelViewMatrix;
@@ -77,7 +77,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
                            + pose[va_BoneIndices.y] * vec4(bulk*va_Vertex1, 1.0) * va_Weights.y
                            + pose[va_BoneIndices.z] * vec4(bulk*va_Vertex2, 1.0) * va_Weights.z;
             vec4 pos = modelViewMatrix * vec4(newVertex.xyz, 1.0);
-            eyePosition = pos.xyz;
+            //eyePosition = pos.xyz;
 
             texCoord = va_Texcoord;
             gl_Position = projectionMatrix * pos;
@@ -97,14 +97,12 @@ class ShadelessBoneBackend: GLSLMaterialBackend
 
         uniform vec4 information;
 
-        in vec3 eyePosition;
+        //in vec3 eyePosition;
         in vec2 texCoord;
 
         layout(location = 0) out vec4 frag_color;
-        layout(location = 2) out vec4 frag_position;
-        layout(location = 4) out vec4 frag_velocity;
-        layout(location = 5) out vec4 frag_luma;
-        layout(location = 6) out vec4 frag_information;
+        layout(location = 1) out vec4 frag_luma;
+        layout(location = 2) out vec4 frag_information;
 
         float luminance(vec3 color)
         {
@@ -129,8 +127,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
             }
             frag_color = vec4(toLinear(col.rgb*color.rgb) * energy, col.a * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
-            frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
-            frag_position = vec4(eyePosition, 0.0);
+            //frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
+            //frag_position = vec4(eyePosition, 0.0);
             frag_information = information;
         }
     ";

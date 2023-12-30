@@ -548,6 +548,7 @@ class GBuffer: Owner
 
     void unbind()
     {
+        glDisablei(GL_BLEND, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 

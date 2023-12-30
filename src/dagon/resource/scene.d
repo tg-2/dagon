@@ -1217,12 +1217,15 @@ class Scene: BaseScene
         renderBackgroundEntities3D(&rc3d);
         deferredEnvPass.render(&rcDeferred, &rc3d);
         deferredLightPass.render(&rcDeferred, &rc3d);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, gbuffer.informationTexture, 0);
-        GLenum[7] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_COLOR_ATTACHMENT6];
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gbuffer.informationTexture, 0);
+        glEnablei(GL_BLEND, 2);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        GLenum[3] bufs = [GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2];
         glDrawBuffers(bufs.length, bufs.ptr);
         renderTransparentEntities3D(&rc3d);
         particleSystem.render(&rc3d);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, 0, 0);
+        glDisablei(GL_BLEND, 2);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, 0, 0);
 
         sceneFramebuffer.unbind();
 

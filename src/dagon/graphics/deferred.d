@@ -62,7 +62,7 @@ class DeferredEnvironmentPass: Owner
 
     private string envPassVsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -84,7 +84,7 @@ class DeferredEnvironmentPass: Owner
 
     private string envPassFsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
         precision highp sampler2DArrayShadow;
 
@@ -798,7 +798,7 @@ class DeferredLightPass: Owner
 
     private string lightPassVsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -816,7 +816,7 @@ class DeferredLightPass: Owner
 
     private string lightPassFsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         #define PI 3.14159265359

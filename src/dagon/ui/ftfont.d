@@ -99,7 +99,7 @@ final class FreeTypeFont: Font
 
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -123,7 +123,7 @@ final class FreeTypeFont: Font
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform sampler2D glyphTexture;

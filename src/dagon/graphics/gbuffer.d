@@ -45,7 +45,7 @@ class GeometryPassBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -84,7 +84,7 @@ class GeometryPassBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         #extension GL_OES_standard_derivatives : enable
         precision highp float;
 

@@ -52,7 +52,7 @@ import dagon.graphics.materials.generic;
 class ShadelessBoneBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         layout (location = 0) in vec3 va_Vertex0;
@@ -85,7 +85,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform sampler2D diffuseTexture;

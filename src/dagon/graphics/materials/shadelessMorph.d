@@ -52,7 +52,7 @@ import dagon.graphics.materials.generic;
 class ShadelessMorphBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform float morphProgress;
@@ -82,7 +82,7 @@ class ShadelessMorphBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform sampler2D diffuseTexture;

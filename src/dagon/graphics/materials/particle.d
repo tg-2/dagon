@@ -53,7 +53,7 @@ import dagon.graphics.gbuffer;
 class ParticleBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
@@ -87,7 +87,7 @@ class ParticleBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
         #extension GL_OES_standard_derivatives : enable
 

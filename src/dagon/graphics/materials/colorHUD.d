@@ -49,7 +49,7 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
 {
     private string vsText =
     q{
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -68,7 +68,7 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
     };
 
     private string fsText = q{
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform vec4 color;

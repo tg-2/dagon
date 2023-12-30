@@ -52,7 +52,7 @@ class TerrainBackend2: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -97,7 +97,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         #extension GL_OES_standard_derivatives : enable
         precision highp float;
 
@@ -254,7 +254,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class TestDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
@@ -264,7 +264,7 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             uniform float time;
             in vec2 position;
@@ -289,7 +289,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class EruptDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
@@ -299,7 +299,7 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             const float pi = 3.1415926535897932384626433832795f;
             const float range = 50.0f;
@@ -364,7 +364,7 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class QuakeDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
@@ -374,7 +374,7 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 300 es
+            #version 330 core
             precision highp float;
             const float pi = 3.1415926535897932384626433832795f;
             const float waveRange = 50.0f;

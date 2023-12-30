@@ -117,7 +117,7 @@ class ShadowBackend: GLSLMaterialBackend
 
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -137,7 +137,7 @@ class ShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         in vec2 texCoord;
@@ -213,7 +213,7 @@ class BoneShadowBackend: GLSLMaterialBackend
 
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -243,7 +243,7 @@ class BoneShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         in vec2 texCoord;
@@ -330,7 +330,7 @@ class TerrainShadowBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -352,7 +352,7 @@ class TerrainShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         out vec4 frag_color;

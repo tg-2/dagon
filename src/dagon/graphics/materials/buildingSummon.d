@@ -46,7 +46,7 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -89,7 +89,7 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 300 es
+        #version 330 core
         #extension GL_OES_standard_derivatives : enable
         precision highp float;
 
@@ -392,7 +392,7 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 class BuildingSummonBackend2: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
@@ -422,7 +422,7 @@ class BuildingSummonBackend2: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform sampler2D diffuseTexture;

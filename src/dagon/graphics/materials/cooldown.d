@@ -49,7 +49,7 @@ class CooldownMaterialBackend: GLSLMaterialBackend
 {
     private string vsText =
     `
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -75,7 +75,7 @@ class CooldownMaterialBackend: GLSLMaterialBackend
     `;
 
     private string fsText = q{
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         in vec2 position;

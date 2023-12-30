@@ -57,7 +57,7 @@ class PostFilter: Owner
 
     private string vsText =
     q{
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform mat4 modelViewMatrix;
@@ -79,7 +79,7 @@ class PostFilter: Owner
 
     private string fsText =
     q{
-        #version 300 es
+        #version 330 core
         precision highp float;
 
         uniform sampler2D fbColor;

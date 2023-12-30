@@ -49,7 +49,8 @@ class HUDMaterialBackend2: GLSLMaterialBackend
 {
     private string vsText =
     q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -67,7 +68,8 @@ class HUDMaterialBackend2: GLSLMaterialBackend
     };
 
     private string fsText = q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
 

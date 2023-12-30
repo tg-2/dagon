@@ -39,7 +39,8 @@ import dagon.graphics.framebuffer;
 class PostFilterFXAA: PostFilter
 {
     private static string vs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -59,7 +60,8 @@ class PostFilterFXAA: PostFilter
     ";
 
     private static string fs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform bool enabled;
         

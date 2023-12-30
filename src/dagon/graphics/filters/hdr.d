@@ -55,7 +55,8 @@ enum Tonemapper
 class PostFilterHDR: PostFilter
 {
     private string vs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -75,7 +76,8 @@ class PostFilterHDR: PostFilter
     ";
 
     private string fs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D fbColor;
         uniform sampler2D fbVelocity;
@@ -170,7 +172,7 @@ class PostFilterHDR: PostFilter
                 float invSamplesMinusOne = 1.0 / float(motionBlurSamples - 1);
                 float usedSamples = 1.0;
 
-                for (float i = 1.0; i < motionBlurSamples; i++)
+                for (float i = 1.0; i < float(motionBlurSamples); i++)
                 {
                     vec2 offset = blurVec * (i * invSamplesMinusOne - 0.5);
                     float mask = texture(fbVelocity, texCoord + offset).w;

@@ -57,7 +57,8 @@ class PostFilter: Owner
 
     private string vsText =
     q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -78,7 +79,8 @@ class PostFilter: Owner
 
     private string fsText =
     q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D fbColor;
         uniform vec2 viewSize;
@@ -120,7 +122,7 @@ class PostFilter: Owner
             GLint logSize = 0;
             glGetShaderiv(shaderVert, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(shaderVert, 999, &logSize, infobuffer.ptr);
-            writeln("Error in vertex shader:");
+            writeln("vertex shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -134,7 +136,7 @@ class PostFilter: Owner
             GLint logSize = 0;
             glGetShaderiv(shaderFrag, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(shaderFrag, 999, &logSize, infobuffer.ptr);
-            writeln("Error in fragment shader:");
+            writeln("fragment shader error (",typeid(this),"):");
             writeln(infobuffer[0..logSize]);
         }
 

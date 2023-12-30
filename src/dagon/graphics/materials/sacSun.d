@@ -52,7 +52,8 @@ import dagon.graphics.materials.generic;
 class SacSunBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 2) in vec2 va_Texcoord;
@@ -76,7 +77,8 @@ class SacSunBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
         uniform float alpha;
@@ -110,7 +112,7 @@ class SacSunBackend: GLSLMaterialBackend
         void main()
         {
             vec4 col = texture(diffuseTexture, texCoord);
-            frag_color = vec4(toLinear(col.rgb) * energy, min(3*luminance(col.rgb),1) * alpha);
+            frag_color = vec4(toLinear(col.rgb) * energy, min(3.0f*luminance(col.rgb), 1.0f) * alpha);
             frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
             //frag_velocity = vec4(0.0, 0.0, 0.0, 1.0);
             frag_position = vec4(eyePosition, 0.0);
@@ -194,8 +196,9 @@ class SacSunBackend: GLSLMaterialBackend
         }else{
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);
         }
         glUniform1i(diffuseTextureLoc, 0);

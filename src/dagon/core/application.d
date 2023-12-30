@@ -222,10 +222,6 @@ class Application: EventListener
 
         GLVersion loadedVersion = DerelictGL3.reload();
         writeln("OpenGL version loaded: ", loadedVersion);
-        if (loadedVersion < GLVersion.gl40)
-        {
-            exitWithError("Sorry, Dagon requires OpenGL 4.0!");
-        }
 
         EventManager eventManager = new EventManager(window, width, height);
         if(!fullscreen&&detectResolution){

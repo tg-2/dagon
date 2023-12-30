@@ -49,7 +49,8 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
 {
     private string vsText =
     q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -67,9 +68,10 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
     };
 
     private string fsText = q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
-        uniform vec4 color = vec4(1,1,1,1);
+        uniform vec4 color;
         uniform sampler2D diffuseTexture;
 
         in vec2 texCoord;
@@ -143,8 +145,10 @@ class ColorHUDMaterialBackend: GLSLMaterialBackend
                 glUniform4fv(colorLoc, 1, Color4f(1.0f,1.0f,1.0f,1.0f).arrayof.ptr);
             }
         }else{
+            setColor(Color4f(1.0f,1.0f,1.0f,1.0f));
             glEnablei(GL_BLEND, 0);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glUniform1i(diffuseTextureLoc, 0);
     }

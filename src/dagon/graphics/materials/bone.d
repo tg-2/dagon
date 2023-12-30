@@ -46,7 +46,8 @@ class BoneBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -56,7 +57,7 @@ class BoneBackend: GLSLMaterialBackend
         uniform mat4 blurModelViewProjMatrix;
 
         uniform mat4 pose[32];
-        uniform float bulk = 1.0f;
+        uniform float bulk;
 
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
@@ -97,7 +98,9 @@ class BoneBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        #extension GL_OES_standard_derivatives : enable
+        precision highp float;
 
         uniform int layer;
 
@@ -178,7 +181,7 @@ class BoneBackend: GLSLMaterialBackend
 
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
-            if (diffuseColor.a == 0)
+            if (diffuseColor.a == 0.0f)
                 discard;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
@@ -186,7 +189,7 @@ class BoneBackend: GLSLMaterialBackend
             float geomMask = float(layer > 0);
 
             if (petrified) {
-                float brightness = 1/3.0f * (diffuseColor.r+diffuseColor.g+diffuseColor.b);
+                float brightness = 1.0f/3.0f * (diffuseColor.r+diffuseColor.g+diffuseColor.b);
                 diffuseColor = 0.3f+0.7f*brightness*vec4(1.0,1.0,0.8,1.0);
                 rms = vec4(0.5, 0.5, 1.0, 1.0);
             }
@@ -385,6 +388,7 @@ class BoneBackend: GLSLMaterialBackend
         glUniform1i(emissionTextureLoc, 3);
         glUniform1f(emissionEnergyLoc, iEnergy.asFloat);
         glUniform1i(petrifiedLoc, iPetrified?iPetrified.asBool:false);
+        glUniform1f(bulkLoc, 1.0f);
 
         glActiveTexture(GL_TEXTURE0);
     }

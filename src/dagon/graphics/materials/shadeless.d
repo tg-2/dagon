@@ -52,7 +52,8 @@ import dagon.graphics.materials.generic;
 class ShadelessBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 2) in vec2 va_Texcoord;
@@ -76,7 +77,8 @@ class ShadelessBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
         uniform vec3 color;
@@ -204,8 +206,9 @@ class ShadelessBackend: GLSLMaterialBackend
         }else{
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);
         }
         glUniform1i(diffuseTextureLoc, 0);

@@ -50,7 +50,8 @@ import dagon.graphics.materials.generic;
 class SkyBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 1) in vec3 va_Normal;
@@ -85,7 +86,8 @@ class SkyBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         #define EPSILON 0.000001
         #define PI 3.14159265

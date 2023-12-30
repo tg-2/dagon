@@ -41,7 +41,8 @@ import dagon.graphics.rc;
 class PostFilterLensDistortion: PostFilter
 {
     private string vs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -61,7 +62,8 @@ class PostFilterLensDistortion: PostFilter
     ";
 
     private string fs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform sampler2D fbColor;
         uniform vec2 viewSize;

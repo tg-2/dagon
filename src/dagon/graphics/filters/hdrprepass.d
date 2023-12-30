@@ -43,7 +43,8 @@ import dagon.graphics.rc;
 class PostFilterHDRPrepass: PostFilter
 {
     private string vs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -63,7 +64,8 @@ class PostFilterHDRPrepass: PostFilter
     ";
 
     private string fs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         #define PI 3.14159265359
         

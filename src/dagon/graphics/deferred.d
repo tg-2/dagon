@@ -62,7 +62,8 @@ class DeferredEnvironmentPass: Owner
 
     private string envPassVsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -83,7 +84,9 @@ class DeferredEnvironmentPass: Owner
 
     private string envPassFsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
+        precision highp sampler2DArrayShadow;
 
         #define PI 3.14159265359
         const float PI2 = PI * 2.0;
@@ -314,7 +317,7 @@ class DeferredEnvironmentPass: Owner
             {
                 s[0] = shadowPCF(shadowTextureArray, 0.0, shadowCoord[0], 2.0, 0.0);
                 for(int i=1;i<numShadowAreas;i++)
-                    s[i] = shadow(shadowTextureArray, i, shadowCoord[i], 0.0);
+                    s[i] = shadow(shadowTextureArray, float(i), shadowCoord[i], 0.0);
                 float w[3];
                 for(int i=0;i<numShadowAreas;i++)
                     w[i] = weight(shadowCoord[i], 8.0);
@@ -537,7 +540,7 @@ class DeferredEnvironmentPass: Owner
             GLint logSize = 0;
             glGetShaderiv(envPassShaderVert, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(envPassShaderVert, 999, &logSize, infobuffer.ptr);
-            writeln("Error in vertex shader:");
+            writeln("vertex shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -551,7 +554,7 @@ class DeferredEnvironmentPass: Owner
             GLint logSize = 0;
             glGetShaderiv(envPassShaderFrag, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(envPassShaderFrag, 999, &logSize, infobuffer.ptr);
-            writeln("Error in fragment shader:");
+            writeln("fragment shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -795,7 +798,8 @@ class DeferredLightPass: Owner
 
     private string lightPassVsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -812,7 +816,8 @@ class DeferredLightPass: Owner
 
     private string lightPassFsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         #define PI 3.14159265359
 
@@ -1029,7 +1034,7 @@ class DeferredLightPass: Owner
             GLint logSize = 0;
             glGetShaderiv(lightPassShaderVert, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(lightPassShaderVert, 999, &logSize, infobuffer.ptr);
-            writeln("Error in vertex shader:");
+            writeln("vertex shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -1043,7 +1048,7 @@ class DeferredLightPass: Owner
             GLint logSize = 0;
             glGetShaderiv(lightPassShaderFrag, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(lightPassShaderFrag, 999, &logSize, infobuffer.ptr);
-            writeln("Error in fragment shader:");
+            writeln("fragment shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -1118,8 +1123,9 @@ class DeferredLightPass: Owner
 
         glEnablei(GL_BLEND, 0);
         glEnablei(GL_BLEND, 1);
-        glBlendFunci(0, GL_ONE, GL_ONE);
-        glBlendFunci(1, GL_ONE, GL_ONE);
+        //glBlendFunci(0, GL_ONE, GL_ONE);
+        //glBlendFunci(1, GL_ONE, GL_ONE);
+        glBlendFunc(GL_ONE, GL_ONE);
 
         foreach(light; lightManager.lightSources.data)
         {

@@ -99,7 +99,8 @@ final class FreeTypeFont: Font
 
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -122,7 +123,8 @@ final class FreeTypeFont: Font
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D glyphTexture;
         uniform vec4 glyphColor;
@@ -235,7 +237,7 @@ final class FreeTypeFont: Font
             GLint logSize = 0;
             glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(vertexShader, 999, &logSize, infobuffer.ptr);
-            writeln("Error in vertex shader:");
+            writeln("vertex shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -249,7 +251,7 @@ final class FreeTypeFont: Font
             GLint logSize = 0;
             glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(fragmentShader, 999, &logSize, infobuffer.ptr);
-            writeln("Error in fragment shader:");
+            writeln("fragment shader error (",__FILE__,":",__LINE__,"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -460,7 +462,8 @@ final class FreeTypeFont: Font
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
         glEnablei(GL_BLEND, 0);
-        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     void unbind(RenderingContext* rc){
         glUseProgram(0);
@@ -487,7 +490,8 @@ final class FreeTypeFont: Font
         glUniform4fv(glyphColorLoc, 1, color.arrayof.ptr);
 
         glEnablei(GL_BLEND, 0);
-        glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         float shift = 0.0f;
         UTF8Decoder dec = UTF8Decoder(str);

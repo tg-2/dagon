@@ -53,7 +53,8 @@ import dagon.graphics.gbuffer;
 class ParticleBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 2) in vec2 va_Texcoord;
@@ -86,7 +87,9 @@ class ParticleBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
+        #extension GL_OES_standard_derivatives : enable
 
         #define PI 3.14159265359
         const float PI2 = PI * 2.0;

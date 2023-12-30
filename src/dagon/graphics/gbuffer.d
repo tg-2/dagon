@@ -45,7 +45,8 @@ class GeometryPassBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -83,7 +84,9 @@ class GeometryPassBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        #extension GL_OES_standard_derivatives : enable
+        precision highp float;
 
         uniform int layer;
 
@@ -162,7 +165,7 @@ class GeometryPassBackend: GLSLMaterialBackend
 
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
-            if (diffuseColor.a == 0)
+            if (diffuseColor.a == 0.0f)
                 discard;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
@@ -539,7 +542,8 @@ class GBuffer: Owner
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glEnablei(GL_BLEND, 6);
-        glBlendFunci(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunci(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     void unbind()

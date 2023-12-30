@@ -46,7 +46,8 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -88,7 +89,9 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        #extension GL_OES_standard_derivatives : enable
+        precision highp float;
 
         uniform int layer;
 
@@ -174,7 +177,7 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
-            if (diffuseColor.a == 0)
+            if (diffuseColor.a == 0.0f)
                 discard;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
             vec3 emission = texture(emissionTexture, shiftedTexCoord).rgb * emissionEnergy;
@@ -389,7 +392,8 @@ class BuildingSummonBackend1: GLSLMaterialBackend
 class BuildingSummonBackend2: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex;
         layout (location = 2) in vec2 va_Texcoord;
@@ -418,7 +422,8 @@ class BuildingSummonBackend2: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
         uniform vec3 color;
@@ -566,8 +571,9 @@ class BuildingSummonBackend2: GLSLMaterialBackend
         }else{
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);
         }
         glUniform1i(diffuseTextureLoc, 0);

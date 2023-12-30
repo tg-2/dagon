@@ -49,7 +49,8 @@ class HUDMaterialBackend: GLSLMaterialBackend
 {
     private string vsText =
     q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -67,7 +68,8 @@ class HUDMaterialBackend: GLSLMaterialBackend
     };
 
     private string fsText = q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
         uniform float alpha;
@@ -142,7 +144,8 @@ class HUDMaterialBackend: GLSLMaterialBackend
             idiffuse.texture.bind();
         }else{
             glEnablei(GL_BLEND, 0);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glUniform1i(diffuseTextureLoc, 0);
         glUniform1f(alphaLoc, alpha);

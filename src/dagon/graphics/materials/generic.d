@@ -281,15 +281,17 @@ class GenericMaterial: Material
         {
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (iblending.asInteger == Additive)
         {
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         }
 
         if (iculling.asBool)
@@ -369,7 +371,7 @@ abstract class GLSLMaterialBackend: Owner, GenericMaterialBackend
             GLint logSize = 0;
             glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(vertexShader, 999, &logSize, infobuffer.ptr);
-            writeln("Error in vertex shader:");
+            writeln("vertex shader error (",typeid(this),"):");
             writeln(infobuffer[0..logSize]);
         }
 
@@ -383,7 +385,7 @@ abstract class GLSLMaterialBackend: Owner, GenericMaterialBackend
             GLint logSize = 0;
             glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logSize);
             glGetShaderInfoLog(fragmentShader, 999, &logSize, infobuffer.ptr);
-            writeln("Error in fragment shader:");
+            writeln("fragment shader error (",typeid(this),"):");
             writeln(infobuffer[0..logSize]);
          }
 

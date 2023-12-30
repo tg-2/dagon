@@ -52,7 +52,8 @@ class TerrainBackend2: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -96,7 +97,9 @@ class TerrainBackend2: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        #extension GL_OES_standard_derivatives : enable
+        precision highp float;
 
         uniform int layer;
 
@@ -165,9 +168,9 @@ class TerrainBackend2: GLSLMaterialBackend
             vec2 screenVelocity = posScreen - prevPosScreen;
 
             // Parallax mapping
-            const float heightFactor = 4;
+            const float heightFactor = 4.0f;
             float detail = max(0.0,1.0-detailFactor*dot(eyePosition,eyePosition));
-            float height = heightFactor*(1-texture(detailTexture, texCoord).x*detail);
+            float height = heightFactor*(1.0f-texture(detailTexture, texCoord).x*detail);
             height = height * parallaxScale + parallaxBias;
             vec2 shiftedTexCoord = texCoord;// + (height * tE.xy);
             /*float height = 0.0;
@@ -184,10 +187,10 @@ class TerrainBackend2: GLSLMaterialBackend
             const vec2 size = vec2(2.0,0.0);
             const ivec3 off = ivec3(-1,0,1);
             float s11 = height;
-            float s01 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.xy).x*detail);
-            float s21 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.zy).x*detail);
-            float s10 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yx).x*detail);
-            float s12 = heightFactor*(1-textureOffset(detailTexture, texCoord, off.yz).x*detail);
+            float s01 = heightFactor*(1.0f-textureOffset(detailTexture, texCoord, off.xy).x*detail);
+            float s21 = heightFactor*(1.0f-textureOffset(detailTexture, texCoord, off.zy).x*detail);
+            float s10 = heightFactor*(1.0f-textureOffset(detailTexture, texCoord, off.yx).x*detail);
+            float s12 = heightFactor*(1.0f-textureOffset(detailTexture, texCoord, off.yz).x*detail);
             vec3 va = normalize(vec3(size.xy,s21-s01));
             vec3 vb = normalize(vec3(size.yx,s12-s10));
             vec4 bump = vec4( cross(va,vb),s11);
@@ -197,7 +200,7 @@ class TerrainBackend2: GLSLMaterialBackend
             // Textures
             vec4 diffuseColor = texture(diffuseTexture, shiftedTexCoord);
             vec4 detailColor = texture(detailTexture, shiftedTexCoord);
-            vec4 detailAverage = textureLod(detailTexture, shiftedTexCoord, 8);
+            vec4 detailAverage = textureLod(detailTexture, shiftedTexCoord, 8.0f);
             vec4 colorColor = texture(colorTexture, coord);
             vec4 totalColor = 0.5*diffuseColor*(1.0+detailColor)*colorColor;
             vec4 rms = texture(rmsTexture, shiftedTexCoord);
@@ -251,7 +254,8 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class TestDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
             void main(){
@@ -260,7 +264,8 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             uniform float time;
             in vec2 position;
             layout (location = 0) out float displacement;
@@ -284,7 +289,8 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class EruptDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
             void main(){
@@ -293,7 +299,8 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             const float pi = 3.1415926535897932384626433832795f;
             const float range = 50.0f;
             const float height = 15.0f;
@@ -357,7 +364,8 @@ class TerrainBackend2: GLSLMaterialBackend
 
     static class QuakeDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             layout (location = 0) in vec2 va_Vertex;
             out vec2 position;
             void main(){
@@ -366,7 +374,8 @@ class TerrainBackend2: GLSLMaterialBackend
             }
         };
         string fsText = q{
-            #version 330 core
+            #version 300 es
+            precision highp float;
             const float pi = 3.1415926535897932384626433832795f;
             const float waveRange = 50.0f;
             const float fallDur = 0.15f;
@@ -447,7 +456,7 @@ class TerrainBackend2: GLSLMaterialBackend
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, null);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, displacementTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displacementTexture, 0);
         GLenum[1] drawBuffers = [GL_COLOR_ATTACHMENT0];
         glDrawBuffers(1, drawBuffers.ptr);
         GLenum status=glCheckFramebufferStatus(GL_FRAMEBUFFER);

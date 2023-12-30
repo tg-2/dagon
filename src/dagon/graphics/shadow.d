@@ -117,7 +117,8 @@ class ShadowBackend: GLSLMaterialBackend
 
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -136,7 +137,8 @@ class ShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         in vec2 texCoord;
         uniform sampler2D diffuseTexture;
@@ -145,7 +147,7 @@ class ShadowBackend: GLSLMaterialBackend
         void main()
         {
             vec4 diffuseColor = texture(diffuseTexture, texCoord);
-            if (diffuseColor.a == 0)
+            if (diffuseColor.a == 0.0f)
                 discard;
             frag_color = vec4(1.0, 1.0, 1.0, 1.0);
         }
@@ -211,13 +213,14 @@ class BoneShadowBackend: GLSLMaterialBackend
 
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
 
         uniform mat4 pose[32];
-        uniform float bulk = 1.0f;
+        uniform float bulk;
 
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
@@ -240,7 +243,8 @@ class BoneShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         in vec2 texCoord;
         uniform sampler2D diffuseTexture;
@@ -249,7 +253,7 @@ class BoneShadowBackend: GLSLMaterialBackend
         void main()
         {
             vec4 diffuseColor = texture(diffuseTexture, texCoord);
-            if (diffuseColor.a == 0)
+            if (diffuseColor.a == 0.0f)
                 discard;
             frag_color = vec4(1.0, 1.0, 1.0, 1.0);
         }
@@ -307,6 +311,7 @@ class BoneShadowBackend: GLSLMaterialBackend
         glActiveTexture(GL_TEXTURE0);
         idiffuse.texture.bind();
         glUniform1i(diffuseTextureLoc, 0);
+        glUniform1f(bulkLoc, 1.0f);
     }
 
     override void unbind(GenericMaterial mat, RenderingContext* rc)
@@ -325,7 +330,8 @@ class TerrainShadowBackend: GLSLMaterialBackend
 {
     string vsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -346,7 +352,8 @@ class TerrainShadowBackend: GLSLMaterialBackend
 
     string fsText =
     "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         out vec4 frag_color;
 

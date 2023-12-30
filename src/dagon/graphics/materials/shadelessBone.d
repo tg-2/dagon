@@ -52,7 +52,8 @@ import dagon.graphics.materials.generic;
 class ShadelessBoneBackend: GLSLMaterialBackend
 {
     private string vsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         layout (location = 0) in vec3 va_Vertex0;
         layout (location = 1) in vec3 va_Vertex1;
@@ -68,7 +69,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         uniform mat4 projectionMatrix;
 
         uniform mat4 pose[32];
-        uniform float bulk = 1.0f;
+        uniform float bulk;
 
         void main()
         {
@@ -84,7 +85,8 @@ class ShadelessBoneBackend: GLSLMaterialBackend
     ";
 
     private string fsText = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform sampler2D diffuseTexture;
         uniform vec3 color;
@@ -122,7 +124,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         {
             vec4 col = texture(diffuseTexture, texCoord);
             if (petrified) {
-                float brightness = 1/3.0f * (col.r+col.g+col.b);
+                float brightness = 1.0f/3.0f * (col.r+col.g+col.b);
                 col = 0.3f+0.7f*brightness*vec4(1.0,1.0,0.8,1.0);
             }
             frag_color = vec4(toLinear(col.rgb*color.rgb) * energy, col.a * alpha);
@@ -243,8 +245,9 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         }else{
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);
         }
         glUniform1i(diffuseTextureLoc, 0);
@@ -252,6 +255,7 @@ class ShadelessBoneBackend: GLSLMaterialBackend
         glUniform1f(alphaLoc, alpha);
         glUniform1f(energyLoc, energy);
         glUniform1i(petrifiedLoc, petrified);
+        glUniform1f(bulkLoc, 1.0f);
 
         glUniform4fv(informationLoc, 1, rc.information.arrayof.ptr);
     }

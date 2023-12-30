@@ -49,7 +49,8 @@ class CooldownMaterialBackend: GLSLMaterialBackend
 {
     private string vsText =
     `
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -64,8 +65,8 @@ class CooldownMaterialBackend: GLSLMaterialBackend
 
         void main()
         {
-            float alpha = 2*M_PI*max(0.0, progress-0.25f*(index-1));
-            if(index==1){ alpha=2*M_PI*progress; }
+            float alpha = 2.0f*M_PI*max(0.0, progress-0.25f*(index-1.0f));
+            if(index==1.0f){ alpha=2.0f*M_PI*progress; }
             float ca = cos(alpha);
             float sa = sin(alpha);
             position = vec2(va_Vertex.x*ca-va_Vertex.y*sa, va_Vertex.x*sa+va_Vertex.y*ca);
@@ -74,7 +75,8 @@ class CooldownMaterialBackend: GLSLMaterialBackend
     `;
 
     private string fsText = q{
-        #version 330 core
+        #version 300 es
+        precision highp float;
 
         in vec2 position;
         out vec4 frag_color;
@@ -124,7 +126,7 @@ class CooldownMaterialBackend: GLSLMaterialBackend
 
         if(!mat){
             glEnablei(GL_BLEND, 0);
-            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glUniform1f(progressLoc, 0.0f);
     }

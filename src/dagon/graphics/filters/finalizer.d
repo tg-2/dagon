@@ -34,7 +34,8 @@ import dagon.graphics.framebuffer;
 class PostFilterFinalizer: PostFilter
 {
     private string vs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -54,7 +55,8 @@ class PostFilterFinalizer: PostFilter
     ";
 
     private string fs = "
-        #version 330 core
+        #version 300 es
+        precision highp float;
         
         uniform sampler2D fbColor;
         uniform vec2 viewSize;

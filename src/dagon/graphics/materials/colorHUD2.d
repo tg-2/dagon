@@ -123,8 +123,9 @@ class ColorHUDMaterialBackend2: GLSLMaterialBackend
             glUniform3fv(colorLoc, 1, color.arrayof.ptr);
         }else{
             glEnablei(GL_BLEND, 0);
-            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            if(glBlendFunci){
+                glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
     }
 

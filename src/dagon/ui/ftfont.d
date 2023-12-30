@@ -462,8 +462,9 @@ final class FreeTypeFont: Font
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, rc.projectionMatrix.arrayof.ptr);
 
         glEnablei(GL_BLEND, 0);
-        //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        if(glBlendFunci){
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     void unbind(RenderingContext* rc){
         glUseProgram(0);
@@ -490,8 +491,9 @@ final class FreeTypeFont: Font
         glUniform4fv(glyphColorLoc, 1, color.arrayof.ptr);
 
         glEnablei(GL_BLEND, 0);
-        //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        if(glBlendFunci){
+            glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         float shift = 0.0f;
         UTF8Decoder dec = UTF8Decoder(str);

@@ -1123,9 +1123,10 @@ class DeferredLightPass: Owner
 
         glEnablei(GL_BLEND, 0);
         glEnablei(GL_BLEND, 1);
-        //glBlendFunci(0, GL_ONE, GL_ONE);
-        //glBlendFunci(1, GL_ONE, GL_ONE);
-        glBlendFunc(GL_ONE, GL_ONE);
+        if(glBlendFunci){
+            glBlendFunci(0, GL_ONE, GL_ONE);
+            glBlendFunci(1, GL_ONE, GL_ONE);
+        }else glBlendFunc(GL_ONE, GL_ONE);
 
         foreach(light; lightManager.lightSources.data)
         {

@@ -281,17 +281,19 @@ class GenericMaterial: Material
         {
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            if(glBlendFunci){
+                glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glBlendFunci(1, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (iblending.asInteger == Additive)
         {
             glEnablei(GL_BLEND, 0);
             glEnablei(GL_BLEND, 1);
-            //glBlendFunci(0, GL_SRC_ALPHA, GL_ONE);
-            //glBlendFunci(1, GL_SRC_ALPHA, GL_ONE);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            if(glBlendFunci){
+                glBlendFunci(0, GL_SRC_ALPHA, GL_ONE);
+                glBlendFunci(1, GL_SRC_ALPHA, GL_ONE);
+            }else glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         }
 
         if (iculling.asBool)

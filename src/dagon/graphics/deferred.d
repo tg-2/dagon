@@ -86,7 +86,7 @@ class DeferredEnvironmentPass: Owner
     "
         #version 330 core
         precision highp float;
-        precision highp sampler2DArrayShadow;
+        // precision highp sampler2DArrayShadow;
 
         #define PI 3.14159265359
         const float PI2 = PI * 2.0;

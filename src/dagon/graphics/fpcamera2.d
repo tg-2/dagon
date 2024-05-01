@@ -74,6 +74,15 @@ class FirstPersonCamera2: EntityController
         return m;
     }
 
+    Matrix4x4f observerTrans()
+    {
+        Matrix4x4f m = translationMatrix(position);
+        // Rotate it by 90 degrees along the X-axis to make it "look up from the ground"
+        // and have the rest of the vectors (up, forward, right) actually point to where they should
+        m *= rotationMatrix(Axis.x, degtorad(-90f));
+        return m;
+    }
+
     override void update(Duration dt)
     {
         transformation = worldTrans();

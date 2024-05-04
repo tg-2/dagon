@@ -298,7 +298,7 @@ final class FreeTypeFont: Font
         Delete(glyphs);
     }
 
-    uint loadGlyph(dchar code, GLuint texId)
+    uint loadGlyph(dchar code, GLuint texId)@system
     {
         FT_Glyph glyph;
 

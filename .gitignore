@@ -4,6 +4,7 @@
 *.a
 
 dub\.selections\.json
+*.redub_cache_json
 
 *~
 

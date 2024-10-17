@@ -2,6 +2,7 @@
 \.dub/
 
 *.a
+*.lib
 
 dub\.selections\.json
 *.redub_cache_json

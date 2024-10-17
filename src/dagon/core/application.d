@@ -311,8 +311,16 @@ class Application: EventListener
 
     ~this()
     {
-        SDL_GL_DeleteContext(glcontext);
-        SDL_DestroyWindow(window);
+        if(glcontext)
+        {
+            SDL_GL_DeleteContext(glcontext);
+            glcontext = null;
+        }
+        if(window)
+        {
+            SDL_DestroyWindow(window);
+            window = null;
+        }
         SDL_Quit();
     }
 }

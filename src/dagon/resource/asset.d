@@ -79,7 +79,7 @@ class AssetManager: Owner
     protected auto monitorTimer = Duration.zero;
 
     float nextLoadingPercentage = 0.0f;
-    
+
     EventManager eventManager;
 
     this(EventManager emngr, Owner o = null)
@@ -93,7 +93,7 @@ class AssetManager: Owner
         hdrImageFactory = New!UnmanagedHDRImageFactory();
 
         loadingThread = New!Thread(&threadFunc);
-        
+
         eventManager = emngr;
     }
 
@@ -189,14 +189,14 @@ class AssetManager: Owner
         assetsByFilename.remove(name);
     }
 
-    void releaseAssets()
+    void releaseAssets(bool reallocate=true)
     {
         clearOwnedObjects();
         Delete(assetsByFilename);
-        assetsByFilename = New!(Dict!(Asset, string));
+        if(reallocate) assetsByFilename = New!(Dict!(Asset, string));
 
         Delete(loadingThread);
-        loadingThread = New!Thread(&threadFunc);
+        if(reallocate) loadingThread = New!Thread(&threadFunc);
     }
 
     bool loadAssetThreadSafePart(Asset asset, string filename)
@@ -206,15 +206,15 @@ class AssetManager: Owner
             writefln("Error: cannot find file \"%s\"", filename);
             return false;
         }
-            
+
         auto fstrm = fs.openForInput(filename);
-        
+
         bool res = asset.loadThreadSafePart(filename, fstrm, fs, this);
         if (!res)
         {
             writefln("Error: failed to load asset \"%s\"", filename);
         }
-            
+
         Delete(fstrm);
         return res;
     }
@@ -297,9 +297,9 @@ class AssetManager: Owner
             {
                 asset.monitorInfo.fileExists = true;
             }
-            else if (currentStat.modificationTimestamp > 
+            else if (currentStat.modificationTimestamp >
                      asset.monitorInfo.lastStat.modificationTimestamp ||
-                     currentStat.sizeInBytes != 
+                     currentStat.sizeInBytes !=
                      asset.monitorInfo.lastStat.sizeInBytes)
             {
                 reloadAsset(filename);

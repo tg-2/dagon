@@ -107,7 +107,7 @@ class BaseScene: EventListener
 
     ~this()
     {
-        release();
+        release(false);
         Delete(assetManager);
     }
 
@@ -206,11 +206,11 @@ class BaseScene: EventListener
         }
     }
 
-    void release()
+    void release(bool reallocate=true)
     {
         onRelease();
         clearOwnedObjects();
-        assetManager.releaseAssets();
+        assetManager.releaseAssets(reallocate);
         needToLoad = true;
         canRun = false;
     }

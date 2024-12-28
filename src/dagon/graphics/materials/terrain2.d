@@ -252,6 +252,69 @@ class TerrainBackend2: GLSLMaterialBackend
     GLuint displacementVao;
     GLuint displacementVbo;
 
+    static class PermanentDisplacementBackend: GLSLMaterialBackend{
+        string vsText = q{
+            #version 330 core
+            precision highp float;
+            layout (location = 0) in vec2 va_Vertex;
+            out vec2 position;
+            void main(){
+                position = va_Vertex;
+                gl_Position = vec4(position,0.0f,1.0f);
+            }
+        };
+        string fsText = q{
+            #version 330 core
+            precision highp float;
+            in vec2 position;
+            uniform sampler2D permanentDisplacementTexture;
+            layout (location = 0) out float displacement;
+            void main(){
+                displacement = texture(permanentDisplacementTexture,0.5f*(position+1.0f)).r;
+            }
+        };
+        override string vertexShaderSrc(){ return vsText; }
+        override string fragmentShaderSrc(){ return fsText; }
+
+        GLuint permanentDisplacementTextureLoc;
+        GLuint permanentDisplacementTexture;
+
+        uint hash = 0xe20eea22; // crc32 hash of 4*256*256 zero bytes
+        void setDisplacement(uint hash, ref float[256][256] displacement){
+            if(hash == this.hash) return;
+            //writeln("drawing: ",this.hash," to ",hash);e
+            this.hash = hash;
+            // TODO: replace smallest possible sub image instead
+            enum width=displacement[0].length, height=displacement.length;
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED, GL_FLOAT, cast(void*)displacement.ptr);
+        }
+
+        this(Owner o){
+            super(o);
+            permanentDisplacementTextureLoc = glGetUniformLocation(shaderProgram, "permanentDisplacementTexture");
+
+            glGenTextures(1, &permanentDisplacementTexture);
+            glBindTexture(GL_TEXTURE_2D, permanentDisplacementTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, null);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        }
+
+        override void bind(GenericMaterial mat, RenderingContext* rc){
+            super.bind(mat, rc);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, permanentDisplacementTexture);
+            glUniform1i(permanentDisplacementTextureLoc, 0);
+        }
+
+        override void unbind(GenericMaterial mat, RenderingContext* rc){
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            super.unbind(mat, rc);
+        }
+    }
+    PermanentDisplacementBackend permanentDisplacement;
+
     static class TestDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
             #version 330 core
@@ -482,6 +545,7 @@ class TerrainBackend2: GLSLMaterialBackend
         glBindBuffer(GL_ARRAY_BUFFER, displacementVbo);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,cast(void*)0);
 
+        permanentDisplacement = New!PermanentDisplacementBackend(this);
         testDisplacement = New!TestDisplacementBackend(this);
         eruptDisplacement = New!EruptDisplacementBackend(this);
         quakeDisplacement = New!QuakeDisplacementBackend(this);
@@ -495,9 +559,23 @@ class TerrainBackend2: GLSLMaterialBackend
         glDisable(GL_DEPTH_TEST);
         glViewport(0,0,256,256);
         glScissor(0,0,256,256);
-        glClearColor(0.0f,0.0f,0.0f,0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        //glClearColor(0.0f,0.0f,0.0f,0.0f);
+        //glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(displacementVao);
+    }
+
+    final void bindPermanentDisplacement(){
+        glDisable(GL_BLEND);
+        permanentDisplacement.bind(null,null);
+    }
+    final void drawPermanentDisplacement(uint hash,ref float[256][256] displacement){
+        permanentDisplacement.setDisplacement(hash,displacement);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    final void unbindPermanentDisplacement(){
+        permanentDisplacement.unbind(null,null);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
     }
 
     final void bindTestDisplacement(){ testDisplacement.bind(null,null); }

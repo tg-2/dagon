@@ -1168,6 +1168,12 @@ class Scene: BaseScene
 
     void startGBufferInformationDownload(){ }
 
+    final void bindPermanentDisplacement(){ terrainMaterialBackend.bindPermanentDisplacement(); }
+    final void permanentDisplacement(uint hash,ref float[256][256] displacement){
+        terrainMaterialBackend.drawPermanentDisplacement(hash,displacement);
+    }
+    final void unbindPermanentDisplacement(){ terrainMaterialBackend.unbindPermanentDisplacement(); }
+
     final void bindTestDisplacement(){ terrainMaterialBackend.bindTestDisplacement(); }
     final void testDisplacement(float time){ terrainMaterialBackend.drawTestDisplacement(time); }
     final void unbindTestDisplacement(){ terrainMaterialBackend.unbindTestDisplacement(); }

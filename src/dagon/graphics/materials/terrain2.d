@@ -295,7 +295,8 @@ class TerrainBackend2: GLSLMaterialBackend
 
             glGenTextures(1, &permanentDisplacementTexture);
             glBindTexture(GL_TEXTURE_2D, permanentDisplacementTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, null);
+            float[256][256] displacement = 0.0f; // TODO: more efficient option?
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 256, 256, 0, GL_RED, GL_FLOAT, cast(void*)displacement.ptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }

@@ -301,6 +301,13 @@ class TerrainBackend2: GLSLMaterialBackend
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
 
+        ~this(){
+            if(glIsTexture(permanentDisplacementTexture)){
+                glDeleteTextures(1,&permanentDisplacementTexture);
+                permanentDisplacementTexture=0;
+            }
+        }
+
         override void bind(GenericMaterial mat, RenderingContext* rc){
             super.bind(mat, rc);
             glActiveTexture(GL_TEXTURE0);

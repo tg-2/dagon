@@ -345,6 +345,10 @@ class SceneApplication: Application
     {
         sceneManager.render();
     }
+
+    ~this(){
+        Delete(sceneManager);
+    }
 }
 
 class Scene: BaseScene

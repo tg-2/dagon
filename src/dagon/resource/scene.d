@@ -682,6 +682,7 @@ class Scene: BaseScene
     int width, height;
     float screenScaling;
     float aspectDistortion;
+	bool centerViewport=true;
 
     this(int width, int height, float screenScaling, float aspectDistortion, SceneManager smngr)
     in
@@ -1124,21 +1125,26 @@ class Scene: BaseScene
     void prepareViewport(Framebuffer b = null, bool move=false)
     {
         glEnable(GL_SCISSOR_TEST);
-        int width=this.width, height=this.height, yOffset=0;
+        int width=this.width, height=this.height, xOffset=0, yOffset=0;
         if(move){
             width=cast(int)(width*screenScaling);
             height=cast(int)(height*screenScaling);
-            yOffset=eventManager.windowHeight-height;
+            if(centerViewport){
+	            xOffset=(eventManager.windowWidth-width)/2;
+	            yOffset=(eventManager.windowHeight-height)/2;
+            }else{
+	            yOffset=eventManager.windowHeight-height;
+            }
         }
         if (b)
         {
-            glScissor(0, 0+yOffset, b.width, b.height);
-            glViewport(0, 0+yOffset, b.width, b.height);
+            glScissor(0+xOffset, 0+yOffset, b.width, b.height);
+            glViewport(0+xOffset, 0+yOffset, b.width, b.height);
         }
         else
         {
-            glScissor(0, 0+yOffset, width, height);
-            glViewport(0, 0+yOffset, width, height);
+            glScissor(0+xOffset, 0+yOffset, width, height);
+            glViewport(0+xOffset, 0+yOffset, width, height);
         }
         if (environment)
             glClearColor(environment.backgroundColor.r, environment.backgroundColor.g, environment.backgroundColor.b, 0.0f);

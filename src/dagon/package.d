@@ -91,6 +91,7 @@ public
     import dagon.graphics.deferred;
     
     import dagon.graphics.materials.generic;
+    import dagon.graphics.materials.morph;
     import dagon.graphics.materials.bone;
     import dagon.graphics.materials.shadeless;
     import dagon.graphics.materials.shadelessBone;

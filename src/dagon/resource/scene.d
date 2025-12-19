@@ -62,6 +62,7 @@ import dagon.graphics.shadow;
 import dagon.graphics.texture;
 import dagon.graphics.particles;
 import dagon.graphics.materials.generic;
+import dagon.graphics.materials.morph;
 import dagon.graphics.materials.bone;
 import dagon.graphics.materials.terrain2;
 import dagon.graphics.materials.shadeless;
@@ -364,6 +365,7 @@ class Scene: BaseScene
 
     //ParticleBackend particleMaterialBackend;
 
+    MorphBackend morphMaterialBackend;
     BoneBackend boneMaterialBackend;
     TerrainBackend2 terrainMaterialBackend;
     ShadelessBackend shadelessMaterialBackend;
@@ -682,7 +684,7 @@ class Scene: BaseScene
     int width, height;
     float screenScaling;
     float aspectDistortion;
-	bool centerViewport=true;
+    bool centerViewport=true;
 
     this(int width, int height, float screenScaling, float aspectDistortion, SceneManager smngr)
     in
@@ -891,6 +893,7 @@ class Scene: BaseScene
         lightManager = New!LightManager(200.0f, 100, assetManager);
 
         defaultMaterialBackend = New!GeometryPassBackend(assetManager);
+        morphMaterialBackend = New!MorphBackend(assetManager);
         boneMaterialBackend = New!BoneBackend(assetManager);
         terrainMaterialBackend = New!TerrainBackend2(assetManager);
         shadelessMaterialBackend = New!ShadelessBackend(assetManager);
@@ -1130,10 +1133,10 @@ class Scene: BaseScene
             width=cast(int)(width*screenScaling);
             height=cast(int)(height*screenScaling);
             if(centerViewport){
-	            xOffset=(eventManager.windowWidth-width)/2;
-	            yOffset=(eventManager.windowHeight-height)/2;
+                xOffset=(eventManager.windowWidth-width)/2;
+                yOffset=(eventManager.windowHeight-height)/2;
             }else{
-	            yOffset=eventManager.windowHeight-height;
+                yOffset=eventManager.windowHeight-height;
             }
         }
         if (b)

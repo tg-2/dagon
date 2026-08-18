@@ -369,6 +369,7 @@ class Scene: BaseScene
     BoneBackend boneMaterialBackend;
     TerrainBackend2 terrainMaterialBackend;
     ShadelessBackend shadelessMaterialBackend;
+    ShadelessColorBackend shadelessColorMaterialBackend;
     ShadelessBoneBackend shadelessBoneMaterialBackend;
     ShadelessMorphBackend shadelessMorphMaterialBackend;
     BuildingSummonBackend1 buildingSummonMaterialBackend1;
@@ -897,6 +898,7 @@ class Scene: BaseScene
         boneMaterialBackend = New!BoneBackend(assetManager);
         terrainMaterialBackend = New!TerrainBackend2(assetManager);
         shadelessMaterialBackend = New!ShadelessBackend(assetManager);
+        shadelessColorMaterialBackend = New!ShadelessColorBackend(assetManager);
         shadelessBoneMaterialBackend = New!ShadelessBoneBackend(assetManager);
         shadelessMorphMaterialBackend = New!ShadelessMorphBackend(assetManager);
         buildingSummonMaterialBackend1 = New!BuildingSummonBackend1(assetManager);

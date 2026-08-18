@@ -231,3 +231,86 @@ class ShadelessBackend: GLSLMaterialBackend
         glUseProgram(0);
     }
 }
+
+/*
+ * Backend for shadeless materials with per-vertex colors
+ * (the vertex color multiplies the final color and alpha)
+ */
+
+class ShadelessColorBackend: ShadelessBackend
+{
+    private string vsTextColor = "
+        #version 330 core
+        precision highp float;
+
+        layout (location = 0) in vec3 va_Vertex;
+        layout (location = 2) in vec2 va_Texcoord;
+        layout (location = 3) in vec4 va_Color;
+
+        out vec2 texCoord;
+        out vec4 vertexColor;
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+
+        uniform mat4 invViewMatrix;
+
+        void main()
+        {
+            vec4 pos = modelViewMatrix * vec4(va_Vertex, 1.0);
+
+            texCoord = va_Texcoord;
+            vertexColor = va_Color;
+            gl_Position = projectionMatrix * pos;
+        }
+    ";
+
+    private string fsTextColor = "
+        #version 330 core
+        precision highp float;
+
+        uniform sampler2D diffuseTexture;
+        uniform vec3 color;
+        uniform float alpha;
+        uniform float energy;
+
+        uniform vec4 information;
+
+        in vec2 texCoord;
+        in vec4 vertexColor;
+
+        layout(location = 0) out vec4 frag_color;
+        layout(location = 1) out vec4 frag_luma;
+        layout(location = 2) out vec4 frag_information;
+
+        float luminance(vec3 color)
+        {
+            return (
+                color.x * 0.27 +
+                color.y * 0.67 +
+                color.z * 0.06
+            );
+        }
+
+        vec3 toLinear(vec3 v)
+        {
+            return pow(v, vec3(2.2));
+        }
+
+        void main()
+        {
+            vec4 col = texture(diffuseTexture, texCoord);
+            frag_color = vec4(toLinear(col.rgb*color.rgb) * energy * vertexColor.rgb, col.a * alpha * vertexColor.a);
+            frag_luma = vec4(energy*luminance(col.rgb), 0.0, 0.0, 1.0);
+            frag_information = information;
+        }
+    ";
+
+    override string vertexShaderSrc() {return vsTextColor;}
+    override string fragmentShaderSrc() {return fsTextColor;}
+
+    this(Owner o)
+    {
+        super(o);
+    }
+}

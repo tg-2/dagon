@@ -32,6 +32,7 @@ import core.time: Duration;
 import dlib.core.memory;
 import dlib.geometry.triangle;
 import dlib.math.vector;
+import dlib.image.color;
 import derelict.opengl;
 import dagon.core.interfaces;
 import dagon.core.ownership;
@@ -40,7 +41,8 @@ enum VertexAttrib
 {
     Vertices = 0,
     Normals = 1,
-    Texcoords = 2
+    Texcoords = 2,
+    Colors = 3
 }
 
 enum VertexAttrib2
@@ -59,12 +61,14 @@ class Mesh: Owner, Drawable
     Vector3f[] vertices;
     Vector3f[] normals;
     Vector2f[] texcoords;
+    Color4f[] colors;
     uint[3][] indices;
 
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint nbo = 0;
     GLuint tbo = 0;
+    GLuint cbo = 0;
     GLuint eao = 0;
 
     this(Owner o)
@@ -77,6 +81,7 @@ class Mesh: Owner, Drawable
         if (vertices.length) Delete(vertices);
         if (normals.length) Delete(normals);
         if (texcoords.length) Delete(texcoords);
+        if (colors.length) Delete(colors);
         if (indices.length) Delete(indices);
 
         if (canRender)
@@ -85,6 +90,7 @@ class Mesh: Owner, Drawable
             glDeleteBuffers(1, &vbo);
             glDeleteBuffers(1, &nbo);
             glDeleteBuffers(1, &tbo);
+            if (cbo) glDeleteBuffers(1, &cbo);
             glDeleteBuffers(1, &eao);
         }
     }
@@ -152,6 +158,7 @@ class Mesh: Owner, Drawable
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &nbo);
             glGenBuffers(1, &tbo);
+            if (colors.length) glGenBuffers(1, &cbo);
             glGenBuffers(1, &eao);
             glGenVertexArrays(1, &vao);
             canRender = true;
@@ -165,6 +172,12 @@ class Mesh: Owner, Drawable
 
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glBufferData(GL_ARRAY_BUFFER, texcoords.length * float.sizeof * 2, texcoords.ptr, GL_STATIC_DRAW);
+
+        if (colors.length)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, cbo);
+            glBufferData(GL_ARRAY_BUFFER, colors.length * float.sizeof * 4, colors.ptr, GL_STATIC_DRAW);
+        }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * uint.sizeof * 3, indices.ptr, GL_STATIC_DRAW);
@@ -183,6 +196,13 @@ class Mesh: Owner, Drawable
         glEnableVertexAttribArray(VertexAttrib.Texcoords);
         glBindBuffer(GL_ARRAY_BUFFER, tbo);
         glVertexAttribPointer(VertexAttrib.Texcoords, 2, GL_FLOAT, GL_FALSE, 0, null);
+
+        if (colors.length)
+        {
+            glEnableVertexAttribArray(VertexAttrib.Colors);
+            glBindBuffer(GL_ARRAY_BUFFER, cbo);
+            glVertexAttribPointer(VertexAttrib.Colors, 4, GL_FLOAT, GL_FALSE, 0, null);
+        }
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -373,6 +373,7 @@ class TerrainShadowBackend: GLSLMaterialBackend
 
     GLint displacementTextureLoc;
     GLint displacementTexture;
+    GLuint zeroDisplacementTexture;
 
     this(Owner o, TerrainBackend2 terrainBackend)
     {
@@ -383,11 +384,20 @@ class TerrainShadowBackend: GLSLMaterialBackend
 
         displacementTextureLoc = glGetUniformLocation(shaderProgram, "displacementTexture");
         displacementTexture = terrainBackend.displacementTexture;
+        zeroDisplacementTexture = terrainBackend.zeroDisplacementTexture;
     }
 
 
     final void setModelViewMatrix(Matrix4x4f modelViewMatrix){
         glUniformMatrix4fv(modelViewMatrixLoc, 1, GL_FALSE, modelViewMatrix.arrayof.ptr);
+    }
+    final void bindZeroDisplacement(){
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, zeroDisplacementTexture);
+    }
+    final void unbindZeroDisplacement(){
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, displacementTexture);
     }
     final void setAlpha(float alpha){ }
     final void setInformation(Vector4f information){ }

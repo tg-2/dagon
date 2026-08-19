@@ -34,6 +34,7 @@ import std.math;
 import dlib.core.memory;
 import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.math.transformation;
 import dlib.math.interpolation;
 import dlib.image.color;
@@ -251,6 +252,7 @@ class TerrainBackend2: GLSLMaterialBackend
     GLuint displacementTexture;
     GLuint displacementVao;
     GLuint displacementVbo;
+    GLuint zeroDisplacementTexture;
 
     static class PermanentDisplacementBackend: GLSLMaterialBackend{
         string vsText = q{
@@ -553,10 +555,49 @@ class TerrainBackend2: GLSLMaterialBackend
         glBindBuffer(GL_ARRAY_BUFFER, displacementVbo);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,cast(void*)0);
 
+        glGenTextures(1, &zeroDisplacementTexture);
+        glBindTexture(GL_TEXTURE_2D, zeroDisplacementTexture);
+        float zeroDisplacement = 0.0f;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 1, 1, 0, GL_RED, GL_FLOAT, cast(void*)&zeroDisplacement);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
         permanentDisplacement = New!PermanentDisplacementBackend(this);
         testDisplacement = New!TestDisplacementBackend(this);
         eruptDisplacement = New!EruptDisplacementBackend(this);
         quakeDisplacement = New!QuakeDisplacementBackend(this);
+    }
+
+    ~this(){
+        if(glIsTexture(zeroDisplacementTexture)){
+            glDeleteTextures(1,&zeroDisplacementTexture);
+            zeroDisplacementTexture=0;
+        }
+    }
+
+    final void bindZeroDisplacement(){
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, zeroDisplacementTexture);
+        glActiveTexture(GL_TEXTURE0);
+    }
+
+    final void unbindZeroDisplacement(){
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, displacementTexture);
+        glActiveTexture(GL_TEXTURE0);
+    }
+
+    final void setModelTransformation(Vector3f position,Quaternionf rotation,RenderingContext* rc){
+        auto modelMatrix=translationMatrix(position)*rotation.toMatrix4x4;
+        auto modelViewMatrix=rc.viewMatrix*modelMatrix;
+        setModelViewMatrix(modelViewMatrix);
+        auto modelViewProjMatrix=rc.projectionMatrix*modelViewMatrix;
+        glUniformMatrix4fv(prevModelViewProjMatrixLoc, 1, GL_FALSE, modelViewProjMatrix.arrayof.ptr);
+        glUniformMatrix4fv(blurModelViewProjMatrixLoc, 1, GL_FALSE, modelViewProjMatrix.arrayof.ptr);
+    }
+
+    final void resetModelTransformation(RenderingContext* rc){
+        setModelTransformation(Vector3f(0.0f,0.0f,0.0f),Quaternionf.identity(),rc);
     }
 
     final void bindDisplacement(){

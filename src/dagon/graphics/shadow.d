@@ -220,6 +220,7 @@ class BoneShadowBackend: GLSLMaterialBackend
         uniform mat4 projectionMatrix;
 
         uniform mat4 pose[32];
+        uniform vec3 rootOffset;
         uniform float bulk;
 
         layout (location = 0) in vec3 va_Vertex0;
@@ -237,6 +238,7 @@ class BoneShadowBackend: GLSLMaterialBackend
             vec4 newVertex = pose[va_BoneIndices.x] * vec4(bulk*va_Vertex0, 1.0) * va_Weights.x
                            + pose[va_BoneIndices.y] * vec4(bulk*va_Vertex1, 1.0) * va_Weights.y
                            + pose[va_BoneIndices.z] * vec4(bulk*va_Vertex2, 1.0) * va_Weights.z;
+            newVertex.xyz += rootOffset;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(newVertex.xyz, 1.0);
         }
     ";
@@ -266,6 +268,7 @@ class BoneShadowBackend: GLSLMaterialBackend
     GLint projectionMatrixLoc;
 
     GLint poseLoc;
+    GLint rootOffsetLoc;
     GLint bulkLoc;
 
     GLint diffuseTextureLoc;
@@ -277,6 +280,7 @@ class BoneShadowBackend: GLSLMaterialBackend
         modelViewMatrixLoc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
         projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
         poseLoc = glGetUniformLocation(shaderProgram, "pose");
+        rootOffsetLoc = glGetUniformLocation(shaderProgram, "rootOffset");
         bulkLoc = glGetUniformLocation(shaderProgram, "bulk");
         diffuseTextureLoc = glGetUniformLocation(shaderProgram, "diffuseTexture");
     }
@@ -286,8 +290,9 @@ class BoneShadowBackend: GLSLMaterialBackend
     }
     final void setAlpha(float alpha){ }
     final void setInformation(Vector4f information){ }
-    final void setPose(Matrix4x4f[] pose){
+    final void setPose(Matrix4x4f[] pose, Vector3f rootOffset = Vector3f(0.0f, 0.0f, 0.0f)){
         glUniformMatrix4fv(poseLoc, cast(int)pose.length, GL_FALSE, cast(float*)pose.ptr);
+        glUniform3fv(rootOffsetLoc, 1, rootOffset.arrayof.ptr);
     }
     final void setBulk(float bulk){
         glUniform1f(bulkLoc, bulk);
